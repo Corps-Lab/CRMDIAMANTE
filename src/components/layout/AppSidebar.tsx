@@ -9,6 +9,7 @@ import {
   CheckSquare,
   MessageSquare,
   CreditCard,
+  ShieldCheck,
   HelpCircle,
   Trash2,
   ChevronLeft,
