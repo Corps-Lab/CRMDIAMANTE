@@ -2,6 +2,7 @@ import { createContext, useContext, useState, ReactNode } from "react";
 import { Contract } from "@/types/contract";
 import { ContractSchemaType } from "@/lib/contract-validations";
 import { useClients } from "./ClientContext";
+import { safeId } from "@/lib/safeId";
 
 interface ContractContextType {
   contracts: Contract[];
@@ -20,7 +21,7 @@ export function ContractProvider({ children }: { children: ReactNode }) {
   const addContract = (data: ContractSchemaType) => {
     const client = clients.find((c) => c.id === data.clientId);
     const newContract: Contract = {
-      id: crypto.randomUUID(),
+      id: safeId("contract"),
       clientId: data.clientId,
       clientName: client?.razaoSocial || "Cliente não encontrado",
       titulo: data.titulo,

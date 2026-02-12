@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 import { Transaction, TransactionFormData } from "@/types/transaction";
 import { useClients } from "./ClientContext";
+import { safeId } from "@/lib/safeId";
 
 interface TransactionContextType {
   transactions: Transaction[];
@@ -25,7 +26,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const addTransaction = (data: TransactionFormData) => {
     const client = data.clientId ? clients.find((c) => c.id === data.clientId) : null;
     const newTransaction: Transaction = {
-      id: crypto.randomUUID(),
+      id: safeId("txn"),
       tipo: data.tipo,
       descricao: data.descricao,
       valor: data.valor,

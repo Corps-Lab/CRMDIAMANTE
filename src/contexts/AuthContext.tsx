@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { safeId } from "@/lib/safeId";
 
 
 const mockUsers = [
@@ -118,7 +119,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (useMockAuth()) {
         const found = mockUsers.find((u) => u.email === email && u.password === password);
         if (!found) throw new Error("Credenciais inválidas");
-        const mockUser: any = { id: crypto.randomUUID(), email: found.email, user_metadata: { name: found.nome } };
+        const mockUser: any = { id: safeId("user"), email: found.email, user_metadata: { name: found.nome } };
         setUser(mockUser);
         setSession(null);
         setProfile({ id: mockUser.id, user_id: mockUser.id, nome: found.nome, telefone: null, avatar_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
@@ -144,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         mockUsers.push({ email, password, nome, role, 
           });
         setRole(role);
-        setProfile({ id: crypto.randomUUID(), user_id: "mock", nome, telefone: telefone || null, cpf: cpf || null, cargo: cargo || null, nivel_acesso: role, avatar_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+        setProfile({ id: safeId("user"), user_id: "mock", nome, telefone: telefone || null, cpf: cpf || null, cargo: cargo || null, nivel_acesso: role, avatar_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
         return { error: null };
       }
       const redirectUrl = `${window.location.origin}/`;
@@ -233,7 +234,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           prev
             ? { ...prev, avatar_url: url }
             : {
-                id: crypto.randomUUID(),
+                id: safeId("user"),
                 user_id: "mock",
                 nome: prev?.nome || "Usuário Mock",
                 telefone: prev?.telefone || null,

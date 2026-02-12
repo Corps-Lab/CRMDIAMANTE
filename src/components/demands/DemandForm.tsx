@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { DemandFormData, TaskItem, statusOptions, prioridadeOptions } from "@/types/demand";
 import { useClients } from "@/contexts/ClientContext";
+import { safeId } from "@/lib/safeId";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -121,7 +122,7 @@ export function DemandForm({
     if (novaTarefa.trim()) {
       setTarefas([
         ...tarefas,
-        { id: crypto.randomUUID(), titulo: novaTarefa.trim(), concluida: false },
+        { id: safeId("task"), titulo: novaTarefa.trim(), concluida: false },
       ]);
       setNovaTarefa("");
     }
