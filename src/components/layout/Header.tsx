@@ -27,7 +27,7 @@ const severityToClasses = (sev: "info" | "warn" | "danger") => ({
 
 export function Header({ totalCaixa, onMenuClick }: HeaderProps) {
   const { profile, role, signOut, user } = useAuth();
-  const notifications = useNotifications();
+  const { notifications, clearNotifications } = useNotifications();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -91,6 +91,15 @@ export function Header({ totalCaixa, onMenuClick }: HeaderProps) {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-72 max-h-96 overflow-y-auto">
+            {notifications.length > 0 && (
+              <DropdownMenuItem
+                className="text-xs justify-between text-muted-foreground"
+                onClick={clearNotifications}
+              >
+                Limpar notificações
+              </DropdownMenuItem>
+            )}
+            {notifications.length > 0 && <DropdownMenuSeparator />}
             {notifications.map((n) => (
               <DropdownMenuItem key={n.id} className="flex items-start gap-3 py-3">
                 {n.type === "prazo" ? (

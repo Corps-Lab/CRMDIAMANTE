@@ -80,36 +80,6 @@ export function useNotifications() {
       }
     });
 
-    // Se não houver dados reais, cria notificações mock para teste
-    if (list.length === 0) {
-      list.push(
-        {
-          id: "mock-prazo",
-          title: "Prazo hoje",
-          description: "Landing page Squad A (responsável: Ana)",
-          type: "prazo",
-          severity: "warn",
-          createdAt: now,
-        },
-        {
-          id: "mock-pendente",
-          title: "Pagamento pendente",
-          description: "Cliente X - R$ 4.200, venc. hoje",
-          type: "pagamento",
-          severity: "warn",
-          createdAt: now,
-        },
-        {
-          id: "mock-atrasado",
-          title: "Pagamento atrasado",
-          description: "Cliente Y - R$ 2.800, +3 dias",
-          type: "pagamento",
-          severity: "danger",
-          createdAt: now,
-        },
-      );
-    }
-
     return list;
   }, [demands, transactions]);
 
@@ -117,5 +87,7 @@ export function useNotifications() {
     setNotifications(computed);
   }, [computed]);
 
-  return notifications;
+  const clearNotifications = () => setNotifications([]);
+
+  return { notifications, clearNotifications };
 }
