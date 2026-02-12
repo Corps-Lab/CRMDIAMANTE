@@ -4,6 +4,16 @@
 
 /* Design System: Dark theme with Lime (#C7F31D) accent for CRM/Business Management */
 
+/* Base font scaling */
+html {
+  font-size: 16px;
+}
+@media (max-width: 640px) {
+  html {
+    font-size: 14px; /* reduce all rem-based text on mobile */
+  }
+}
+
 @layer base {
   :root {
     --background: 0 0% 4%;
