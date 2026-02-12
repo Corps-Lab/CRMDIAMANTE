@@ -1,10 +1,10 @@
 {
   "name": "C.LABS CRM",
   "short_name": "C.LABS CRM",
-  "start_url": "/",
+  "start_url": "/C.LABS-CRM/",
   "display": "standalone",
   "background_color": "#050505",
-  "theme_color": "#8b5cf6",
+  "theme_color": "#C7F31D",
   "icons": [
     { "src": "/icon-32.png", "sizes": "32x32", "type": "image/png" },
     { "src": "/icon-180.png", "sizes": "180x180", "type": "image/png" },
