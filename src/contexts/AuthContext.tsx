@@ -40,7 +40,9 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const useMockAuth = () => !import.meta.env.VITE_SUPABASE_URL || import.meta.env.VITE_USE_MOCK_AUTH === "true";
+// Só usa modo mock se for explicitamente habilitado. Em produção (Pages) usamos sempre Supabase,
+// mesmo que as variáveis não estejam presentes em tempo de build (há fallback hardcoded no client).
+const useMockAuth = () => import.meta.env.VITE_USE_MOCK_AUTH === "true";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
