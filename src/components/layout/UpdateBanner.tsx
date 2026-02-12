@@ -6,27 +6,14 @@ const STORAGE_KEY = "clabs_app_version";
 
 export function UpdateBanner() {
   const [show, setShow] = useState(false);
-  const [autoReloadIn, setAutoReloadIn] = useState(3);
 
   useEffect(() => {
     const current = __APP_VERSION__;
     const stored = localStorage.getItem(STORAGE_KEY);
     if (stored && stored !== current) {
       setShow(true);
-      // inicia contagem para recarregar automaticamente
-      let seconds = 3;
-      setAutoReloadIn(seconds);
-      const interval = setInterval(() => {
-        seconds -= 1;
-        setAutoReloadIn(seconds);
-        if (seconds <= 0) {
-          clearInterval(interval);
-          window.location.reload();
-        }
-      }, 1000);
-      return () => clearInterval(interval);
     }
-    // always store current version
+    // sempre registra a versão atual para evitar loop
     localStorage.setItem(STORAGE_KEY, current);
   }, []);
 
@@ -42,7 +29,7 @@ export function UpdateBanner() {
       <div className="flex items-center gap-3 rounded-lg border border-primary/40 bg-primary/10 px-4 py-3">
         <RefreshCw className="w-4 h-4 text-primary" />
         <div className="flex-1 text-sm text-foreground">
-          Nova atualização disponível. Atualizando automaticamente em {autoReloadIn}s…
+          Nova atualização disponível. Clique em “Atualizar” para carregar a versão mais recente.
         </div>
         <Button size="sm" className="h-8 px-3" onClick={reload}>
           Atualizar
