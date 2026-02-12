@@ -18,6 +18,7 @@ import Demandas from "./pages/Demandas";
 import Acessos from "./pages/Acessos";
 import Sugestoes from "./pages/Sugestoes";
 import Suporte from "./pages/Suporte";
+import Progress from "./pages/Progress";
 
 import Auth from "./pages/Auth";
 import Perfil from "./pages/Perfil";
@@ -48,6 +49,7 @@ const App = () => (
                       <Route path="/sugestoes" element={<Sugestoes />} />
                       <Route path="/suporte" element={<Suporte />} />
                       <Route path="/perfil" element={<Perfil />} />
+                      <Route path="/progresso" element={<Progress />} />
                     </Route>
                     <Route path="/auth" element={<Auth />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
