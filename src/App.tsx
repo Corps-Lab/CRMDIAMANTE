@@ -25,7 +25,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <BrowserRouter>
+      <BrowserRouter basename="/C.LABS-CRM">
         <AuthProvider>
           <ClientProvider>
             <ContractProvider>
