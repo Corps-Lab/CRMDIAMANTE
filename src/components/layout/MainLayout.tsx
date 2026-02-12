@@ -1,6 +1,7 @@
 import { ReactNode, useState } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { Header } from "./Header";
+import { UpdateBanner } from "./UpdateBanner";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -31,6 +32,7 @@ export function MainLayout({ children, totalCaixa = 9700 }: MainLayoutProps) {
 
       <div className="flex flex-col flex-1 overflow-hidden">
         <Header totalCaixa={totalCaixa} onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+        <UpdateBanner />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {children}
         </main>
