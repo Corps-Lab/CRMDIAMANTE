@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { TopClientsChart } from "@/components/dashboard/TopClientsChart";
@@ -7,6 +8,7 @@ import { DollarSign, CreditCard, TrendingUp, Clock } from "lucide-react";
 
 const Index = () => {
   const { clients, totalFaturamento } = useClients();
+  const [goal, setGoal] = useState(15000);
 
   // Calculate metrics from clients data
   const metricsData = {
@@ -68,7 +70,7 @@ const Index = () => {
             <TopClientsChart data={topClientsData} />
           </div>
           <div>
-            <RevenueGoalCard current={metricsData.faturamento} goal={15000} />
+          <RevenueGoalCard current={metricsData.faturamento} goal={goal} onEditGoal={(v) => setGoal(v)} />
           </div>
         </div>
       </div>

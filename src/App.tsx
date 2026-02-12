@@ -15,6 +15,8 @@ import Contratos from "./pages/Contratos";
 import Financeiro from "./pages/Financeiro";
 import Demandas from "./pages/Demandas";
 import Acessos from "./pages/Acessos";
+import Sugestoes from "./pages/Sugestoes";
+import Suporte from "./pages/Suporte";
 
 import Auth from "./pages/Auth";
 import Perfil from "./pages/Perfil";
@@ -41,6 +43,8 @@ const App = () => (
                     <Route path="/despesas" element={<Financeiro />} />
                     <Route path="/tarefas" element={<Demandas />} />
                     <Route path="/acessos" element={<Acessos />} />
+                    <Route path="/sugestoes" element={<Sugestoes />} />
+                    <Route path="/suporte" element={<Suporte />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/perfil" element={<Perfil />} />
                     {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
