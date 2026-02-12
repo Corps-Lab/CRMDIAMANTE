@@ -2,27 +2,24 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || "";
+// Fallbacks embedded for GitHub Pages build (public anon key is safe to expose)
+const FALLBACK_URL = "https://wsaisktlywyadtkcqiaj.supabase.co";
+const FALLBACK_ANON =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzYWlza3RseXd5YWR0a2NxaWFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4NjcxODcsImV4cCI6MjA4NjQ0MzE4N30.w-I8ZqXZIOr_103YbsAdL80Yrdbg2rmDHgB9kRpwgqI";
+
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || FALLBACK_URL;
 const SUPABASE_ANON_KEY =
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
-  "";
+  FALLBACK_ANON;
 
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
-export const supabase = SUPABASE_URL && SUPABASE_ANON_KEY
-  ? createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
-      auth: {
-        storage: localStorage,
-        persistSession: true,
-        autoRefreshToken: true,
-      }
-    })
-  // Fallback dummy client that throws if called without config
-  : (() => {
-      console.warn("Supabase URL/key não configurados; usando modo mock.");
-      return createClient<Database>("https://example.supabase.co", "public-anon-key", {
-        global: { headers: { "x-mock": "true" } },
-      });
-    })();
+export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    storage: localStorage,
+    persistSession: true,
+    autoRefreshToken: true,
+  }
+});
