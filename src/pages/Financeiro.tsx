@@ -43,8 +43,9 @@ export default function Financeiro() {
   const saldoTotal = totalEntradas - totalDespesas;
 
   const handleAddTransaction = (mes?: number, tipo?: "entrada" | "despesa") => {
+    // Garante abertura mesmo em navegadores que atrasam updates síncronos
     setFormDefaults({ mes, tipo });
-    setIsFormOpen(true);
+    requestAnimationFrame(() => setIsFormOpen(true));
   };
 
   const handleSubmit = (data: TransactionFormData) => {
@@ -89,7 +90,7 @@ export default function Financeiro() {
                 ))}
               </SelectContent>
             </Select>
-            <Button onClick={() => handleAddTransaction()} className="gap-2">
+            <Button type="button" onClick={() => handleAddTransaction()} className="gap-2">
               <Plus className="w-4 h-4" />
               Nova Transação
             </Button>

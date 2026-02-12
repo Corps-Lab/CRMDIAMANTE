@@ -94,6 +94,7 @@ export function MonthlyGrid({
                         variant="ghost"
                         className="h-6 text-xs"
                         onClick={() => onAddTransaction(m.value, "entrada")}
+                        type="button"
                       >
                         <Plus className="w-3 h-3 mr-1" />
                         Adicionar
@@ -143,6 +144,7 @@ export function MonthlyGrid({
                         variant="ghost"
                         className="h-6 text-xs"
                         onClick={() => onAddTransaction(m.value, "despesa")}
+                        type="button"
                       >
                         <Plus className="w-3 h-3 mr-1" />
                         Adicionar
