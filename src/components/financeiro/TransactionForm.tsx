@@ -55,6 +55,7 @@ export function TransactionForm({
   const { toast } = useToast();
   const { clients } = useClients();
   const currentYear = new Date().getFullYear();
+  const defaultMonth = defaultMes || new Date().getMonth() + 1;
 
   const {
     register,
@@ -70,7 +71,7 @@ export function TransactionForm({
       descricao: "",
       valor: 0,
       categoria: "",
-      mes: defaultMes || new Date().getMonth() + 1,
+      mes: defaultMonth,
       ano: currentYear,
       vencimento: 5,
       clientId: "",
@@ -78,6 +79,23 @@ export function TransactionForm({
   });
 
   const tipo = watch("tipo");
+
+  // Reaplica defaults toda vez que abrir ou mudar mês/tipo padrão
+  useEffect(() => {
+    if (open) {
+      reset({
+        tipo: defaultTipo,
+        descricao: "",
+        valor: 0,
+        categoria: "",
+        mes: defaultMonth,
+        ano: currentYear,
+        vencimento: 5,
+        clientId: "",
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, defaultMes, defaultTipo]);
 
   const handleFormSubmit = (data: TransactionSchemaType) => {
     onSubmit(data as TransactionFormData);
