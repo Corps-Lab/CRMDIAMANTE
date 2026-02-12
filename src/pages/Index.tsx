@@ -12,7 +12,7 @@ const Index = () => {
   const metricsData = {
     faturamento: totalFaturamento,
     despesas: 0,
-    receitaAnual: totalFaturamento * 12,
+    receitaAnual: 0,
     pendentes: 0,
   };
 
