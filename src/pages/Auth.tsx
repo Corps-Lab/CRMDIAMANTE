@@ -85,8 +85,8 @@ export default function Auth() {
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm text-white">E-mail</Label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  <Mail className="w-4 h-4" aria-hidden="true" />
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary">
+                  <Mail className="w-5 h-5" aria-hidden="true" />
                 </span>
                 <Input
                   id="email"
@@ -103,8 +103,8 @@ export default function Auth() {
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm text-white">Senha</Label>
               <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground">
-                  <Lock className="w-4 h-4" aria-hidden="true" />
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-primary">
+                  <Lock className="w-5 h-5" aria-hidden="true" />
                 </span>
                 <Input
                   id="password"
@@ -118,7 +118,7 @@ export default function Auth() {
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 grid place-items-center rounded-lg border border-primary/40 bg-primary/10 text-muted-foreground hover:bg-primary/20"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-9 h-9 grid place-items-center rounded-lg border border-primary/60 bg-primary/10 text-primary hover:bg-primary/20"
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label="Mostrar ou ocultar senha"
                 >
