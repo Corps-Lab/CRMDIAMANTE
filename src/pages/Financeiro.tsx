@@ -74,8 +74,10 @@ export default function Financeiro() {
               </p>
             </div>
           </div>
+        </div>
 
-          <div className="flex items-center gap-3">
+        <Tabs defaultValue="entradas" className="space-y-6">
+          <div className="flex items-center justify-between flex-wrap gap-3">
             <Select value={String(selectedYear)} onValueChange={(v) => setSelectedYear(parseInt(v))}>
               <SelectTrigger className="w-[120px] bg-card border-border">
                 <Calendar className="w-4 h-4 mr-2" />
@@ -89,7 +91,48 @@ export default function Financeiro() {
                 ))}
               </SelectContent>
             </Select>
-            <div className="flex items-center gap-2">
+            <TabsList>
+              <TabsTrigger value="entradas">Entradas</TabsTrigger>
+              <TabsTrigger value="despesas">Despesas</TabsTrigger>
+              <TabsTrigger value="visao">Visão Geral</TabsTrigger>
+            </TabsList>
+          </div>
+
+          <TabsContent value="entradas" className="space-y-6">
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                className="gap-2 bg-green-600 hover:bg-green-500 text-white"
+                onClick={() => handleAddTransaction(undefined, "entrada")}
+              >
+                <ArrowDownCircle className="w-4 h-4" />
+                Criar Entrada
+              </Button>
+            </div>
+            {renderSummaryCards()}
+            {renderChart()}
+            {renderGrid()}
+          </TabsContent>
+
+          <TabsContent value="despesas" className="space-y-6">
+            <div className="flex justify-end">
+              <Button
+                type="button"
+                variant="destructive"
+                className="gap-2"
+                onClick={() => handleAddTransaction(undefined, "despesa")}
+              >
+                <ArrowUpCircle className="w-4 h-4" />
+                Criar Despesa
+              </Button>
+            </div>
+            {renderSummaryCards()}
+            {renderChart()}
+            {renderGrid()}
+          </TabsContent>
+
+          <TabsContent value="visao" className="space-y-6">
+            <div className="flex gap-2 justify-end">
               <Button
                 type="button"
                 className="gap-2 bg-green-600 hover:bg-green-500 text-white"
@@ -108,91 +151,11 @@ export default function Financeiro() {
                 Criar Despesa
               </Button>
             </div>
-          </div>
-        </div>
-
-        {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="p-5 rounded-xl bg-card border border-border">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-green-500/10">
-                <TrendingUp className="w-5 h-5 text-green-400" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Entradas</p>
-                <p className="text-2xl font-bold text-green-400">{formatCurrency(totalEntradas)}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-5 rounded-xl bg-card border border-border">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-lg bg-red-500/10">
-                <TrendingDown className="w-5 h-5 text-red-400" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Despesas</p>
-                <p className="text-2xl font-bold text-red-400">{formatCurrency(totalDespesas)}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-5 rounded-xl bg-card border border-border">
-            <div className="flex items-center gap-3">
-              <div className={`p-3 rounded-lg ${saldoTotal >= 0 ? "bg-primary/10" : "bg-red-500/10"}`}>
-                <DollarSign className={`w-5 h-5 ${saldoTotal >= 0 ? "text-primary" : "text-red-400"}`} />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Saldo</p>
-                <p className={`text-2xl font-bold ${saldoTotal >= 0 ? "text-primary" : "text-red-400"}`}>
-                  {formatCurrency(saldoTotal)}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Chart */}
-        <div className="p-6 rounded-xl bg-card border border-border card-glow">
-          <h3 className="text-lg font-semibold text-primary mb-4">Fluxo de Caixa - {selectedYear}</h3>
-          <div className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData}>
-                <defs>
-                  <linearGradient id="colorEntradas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
-                  </linearGradient>
-                  <linearGradient id="colorDespesas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 18%)" vertical={false} />
-                <XAxis dataKey="name" tick={{ fill: "hsl(0 0% 65%)", fontSize: 12 }} axisLine={{ stroke: "hsl(0 0% 18%)" }} />
-                <YAxis tick={{ fill: "hsl(0 0% 65%)", fontSize: 12 }} axisLine={{ stroke: "hsl(0 0% 18%)" }} tickFormatter={(v) => `R$${v / 1000}k`} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 18%)", borderRadius: "8px" }}
-                  formatter={(value: number) => formatCurrency(value)}
-                />
-                <Legend />
-                <Area type="monotone" dataKey="entradas" name="Entradas" stroke="#22c55e" fill="url(#colorEntradas)" strokeWidth={2} />
-                <Area type="monotone" dataKey="despesas" name="Despesas" stroke="#ef4444" fill="url(#colorDespesas)" strokeWidth={2} />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Monthly Grid */}
-        <div className="p-6 rounded-xl bg-card border border-border card-glow">
-          <h3 className="text-lg font-semibold text-primary mb-4">Visão Mensal - {selectedYear}</h3>
-          <MonthlyGrid
-            transactions={transactions}
-            ano={selectedYear}
-            onAddTransaction={handleAddTransaction}
-            onRemoveTransaction={removeTransaction}
-          />
-        </div>
+            {renderSummaryCards()}
+            {renderChart()}
+            {renderGrid()}
+          </TabsContent>
+        </Tabs>
 
         {/* Form Modal */}
         <TransactionForm
@@ -208,4 +171,96 @@ export default function Financeiro() {
       </div>
     </MainLayout>
   );
+
+  function renderSummaryCards() {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="p-5 rounded-xl bg-card border border-border">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-green-500/10">
+              <TrendingUp className="w-5 h-5 text-green-400" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Total Entradas</p>
+              <p className="text-2xl font-bold text-green-400">{formatCurrency(totalEntradas)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-5 rounded-xl bg-card border border-border">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-lg bg-red-500/10">
+              <TrendingDown className="w-5 h-5 text-red-400" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Total Despesas</p>
+              <p className="text-2xl font-bold text-red-400">{formatCurrency(totalDespesas)}</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-5 rounded-xl bg-card border border-border">
+          <div className="flex items-center gap-3">
+            <div className={`p-3 rounded-lg ${saldoTotal >= 0 ? "bg-primary/10" : "bg-red-500/10"}`}>
+              <DollarSign className={`w-5 h-5 ${saldoTotal >= 0 ? "text-primary" : "text-red-400"}`} />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Saldo</p>
+              <p className={`text-2xl font-bold ${saldoTotal >= 0 ? "text-primary" : "text-red-400"}`}>
+                {formatCurrency(saldoTotal)}
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  function renderChart() {
+    return (
+      <div className="p-6 rounded-xl bg-card border border-border card-glow">
+        <h3 className="text-lg font-semibold text-primary mb-4">Fluxo de Caixa - {selectedYear}</h3>
+        <div className="h-[250px]">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData}>
+              <defs>
+                <linearGradient id="colorEntradas" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#22c55e" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#22c55e" stopOpacity={0} />
+                </linearGradient>
+                <linearGradient id="colorDespesas" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(0 0% 18%)" vertical={false} />
+              <XAxis dataKey="name" tick={{ fill: "hsl(0 0% 65%)", fontSize: 12 }} axisLine={{ stroke: "hsl(0 0% 18%)" }} />
+              <YAxis tick={{ fill: "hsl(0 0% 65%)", fontSize: 12 }} axisLine={{ stroke: "hsl(0 0% 18%)" }} tickFormatter={(v) => `R$${v / 1000}k`} />
+              <Tooltip
+                contentStyle={{ backgroundColor: "hsl(0 0% 7%)", border: "1px solid hsl(0 0% 18%)", borderRadius: "8px" }}
+                formatter={(value: number) => formatCurrency(value)}
+              />
+              <Legend />
+              <Area type="monotone" dataKey="entradas" name="Entradas" stroke="#22c55e" fill="url(#colorEntradas)" strokeWidth={2} />
+              <Area type="monotone" dataKey="despesas" name="Despesas" stroke="#ef4444" fill="url(#colorDespesas)" strokeWidth={2} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
+    );
+  }
+
+  function renderGrid() {
+    return (
+      <div className="p-6 rounded-xl bg-card border border-border card-glow">
+        <h3 className="text-lg font-semibold text-primary mb-4">Visão Mensal - {selectedYear}</h3>
+        <MonthlyGrid
+          transactions={transactions}
+          ano={selectedYear}
+          onAddTransaction={handleAddTransaction}
+          onRemoveTransaction={removeTransaction}
+        />
+      </div>
+    );
+  }
 }
