@@ -182,7 +182,7 @@ export default function Financeiro() {
         {/* Form Modal */}
         <TransactionForm
           open={isFormOpen}
-          onClose={() => setIsFormOpen(false)}
+          onOpenChange={setIsFormOpen}
           onSubmit={handleSubmit}
           defaultMes={formDefaults.mes}
           defaultTipo={formDefaults.tipo}
