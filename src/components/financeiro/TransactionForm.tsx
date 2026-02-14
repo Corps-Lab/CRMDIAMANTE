@@ -14,14 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowDownCircle, ArrowUpCircle } from "lucide-react";
+import { ArrowDownCircle, ArrowUpCircle, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const transactionSchema = z
@@ -136,209 +130,219 @@ export function TransactionForm({
   };
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-[500px] bg-card border-border">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-semibold text-primary">
-            Nova Transação
-          </DialogTitle>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
-          {/* Tipo */}
-          <div className="grid grid-cols-2 gap-3">
+    <>
+      {open && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-4">
+          <div className="relative w-full max-w-[520px] rounded-lg bg-card border border-border shadow-lg p-6">
             <button
               type="button"
-              onClick={() => setValue("tipo", "entrada")}
-              className={cn(
-                "flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all",
-                tipo === "entrada"
-                  ? "border-green-500 bg-green-500/10 text-green-400"
-                  : "border-border bg-secondary text-muted-foreground hover:border-green-500/50"
-              )}
+              onClick={handleClose}
+              className="absolute right-4 top-4 text-muted-foreground hover:text-foreground"
             >
-              <ArrowDownCircle className="w-5 h-5" />
-              <span className="font-medium">Entrada</span>
+              <X className="w-4 h-4" />
             </button>
-            <button
-              type="button"
-              onClick={() => setValue("tipo", "despesa")}
-              className={cn(
-                "flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all",
-                tipo === "despesa"
-                  ? "border-red-500 bg-red-500/10 text-red-400"
-                  : "border-border bg-secondary text-muted-foreground hover:border-red-500/50"
+
+            <div className="mb-4">
+              <h2 className="text-xl font-semibold text-primary">Nova Transação</h2>
+            </div>
+
+            <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
+              {/* Tipo */}
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  type="button"
+                  onClick={() => setValue("tipo", "entrada")}
+                  className={cn(
+                    "flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all",
+                    tipo === "entrada"
+                      ? "border-green-500 bg-green-500/10 text-green-400"
+                      : "border-border bg-secondary text-muted-foreground hover:border-green-500/50"
+                  )}
+                >
+                  <ArrowDownCircle className="w-5 h-5" />
+                  <span className="font-medium">Entrada</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setValue("tipo", "despesa")}
+                  className={cn(
+                    "flex items-center justify-center gap-2 p-4 rounded-lg border-2 transition-all",
+                    tipo === "despesa"
+                      ? "border-red-500 bg-red-500/10 text-red-400"
+                      : "border-border bg-secondary text-muted-foreground hover:border-red-500/50"
+                  )}
+                >
+                  <ArrowUpCircle className="w-5 h-5" />
+                  <span className="font-medium">Despesa</span>
+                </button>
+              </div>
+
+              {/* Descrição */}
+              <div className="space-y-2">
+                <Label htmlFor="descricao">Descrição *</Label>
+                <Input
+                  id="descricao"
+                  placeholder="Descrição da transação"
+                  {...register("descricao")}
+                  className="bg-secondary border-border"
+                />
+                {errors.descricao && (
+                  <p className="text-sm text-destructive">{errors.descricao.message}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Valor */}
+                <div className="space-y-2">
+                  <Label htmlFor="valor">Valor (R$) *</Label>
+                  <Input
+                    id="valor"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    {...register("valor", { valueAsNumber: true })}
+                    className="bg-secondary border-border"
+                  />
+                  {errors.valor && (
+                    <p className="text-sm text-destructive">{errors.valor.message}</p>
+                  )}
+                </div>
+
+                {/* Categoria */}
+                <div className="space-y-2">
+                  <Label>Categoria *</Label>
+                  <Select
+                    value={watch("categoria")}
+                    onValueChange={(value) => setValue("categoria", value)}
+                  >
+                    <SelectTrigger className="bg-secondary border-border">
+                      <SelectValue placeholder="Selecione" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categorias[tipo].map((cat) => (
+                        <SelectItem key={cat} value={cat}>
+                          {cat}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {errors.categoria && (
+                    <p className="text-sm text-destructive">{errors.categoria.message}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Mês */}
+                <div className="space-y-2">
+                  <Label>Mês *</Label>
+                  <Select
+                    value={String(watch("mes"))}
+                    onValueChange={(value) => setValue("mes", parseInt(value))}
+                  >
+                    <SelectTrigger className="bg-secondary border-border">
+                      <SelectValue placeholder="Mês" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {meses.map((m) => (
+                        <SelectItem key={m.value} value={String(m.value)}>
+                          {m.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Ano */}
+                <div className="space-y-2">
+                  <Label>Ano *</Label>
+                  <Select
+                    value={String(watch("ano"))}
+                    onValueChange={(value) => setValue("ano", parseInt(value))}
+                  >
+                    <SelectTrigger className="bg-secondary border-border">
+                      <SelectValue placeholder="Ano" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[currentYear - 1, currentYear, currentYear + 1].map((year) => (
+                        <SelectItem key={year} value={String(year)}>
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                {/* Vencimento */}
+                <div className="space-y-2">
+                  <Label>Dia do pagamento</Label>
+                  <Input
+                    id="vencimento"
+                    type="number"
+                    min="1"
+                    max="31"
+                    {...register("vencimento", { valueAsNumber: true })}
+                    className="bg-secondary border-border"
+                  />
+                </div>
+              </div>
+
+              {/* Cliente (opcional para entradas) */}
+              {tipo === "entrada" && (
+                <div className="space-y-2">
+                  <Label>Cliente (opcional)</Label>
+                  <Select
+                    value={watch("clientId") || ""}
+                    onValueChange={(value) => {
+                      setValue("clientId", value);
+                      setValue("referenciaNome", ""); // se escolher da lista, limpa texto
+                    }}
+                  >
+                    <SelectTrigger className="bg-secondary border-border">
+                      <SelectValue placeholder="Vincular a cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">Nenhum</SelectItem>
+                      {clients.map((client) => (
+                        <SelectItem key={client.id} value={client.id}>
+                          {client.razaoSocial}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               )}
-            >
-              <ArrowUpCircle className="w-5 h-5" />
-              <span className="font-medium">Despesa</span>
-            </button>
+
+              {/* Nome de referência */}
+              <div className="space-y-2">
+                <Label>
+                  {tipo === "entrada"
+                    ? "Nome do cliente (se não estiver na lista)"
+                    : "Nome do colaborador"}
+                </Label>
+                <Input
+                  id="referenciaNome"
+                  placeholder={tipo === "entrada" ? "Cliente pagante" : "Colaborador"}
+                  {...register("referenciaNome")}
+                  className="bg-secondary border-border"
+                />
+                {errors.referenciaNome && (
+                  <p className="text-sm text-destructive">{errors.referenciaNome.message}</p>
+                )}
+              </div>
+
+              <div className="flex justify-end gap-3 pt-4">
+                <Button type="button" variant="outline" onClick={handleClose}>
+                  Cancelar
+                </Button>
+                <Button type="submit">Registrar</Button>
+              </div>
+            </form>
           </div>
-
-          {/* Descrição */}
-          <div className="space-y-2">
-            <Label htmlFor="descricao">Descrição *</Label>
-            <Input
-              id="descricao"
-              placeholder="Descrição da transação"
-              {...register("descricao")}
-              className="bg-secondary border-border"
-            />
-            {errors.descricao && (
-              <p className="text-sm text-destructive">{errors.descricao.message}</p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {/* Valor */}
-            <div className="space-y-2">
-              <Label htmlFor="valor">Valor (R$) *</Label>
-              <Input
-                id="valor"
-                type="number"
-                step="0.01"
-                min="0"
-                {...register("valor", { valueAsNumber: true })}
-                className="bg-secondary border-border"
-              />
-              {errors.valor && (
-                <p className="text-sm text-destructive">{errors.valor.message}</p>
-              )}
-            </div>
-
-            {/* Categoria */}
-            <div className="space-y-2">
-              <Label>Categoria *</Label>
-              <Select
-                value={watch("categoria")}
-                onValueChange={(value) => setValue("categoria", value)}
-              >
-                <SelectTrigger className="bg-secondary border-border">
-                  <SelectValue placeholder="Selecione" />
-                </SelectTrigger>
-                <SelectContent>
-                  {categorias[tipo].map((cat) => (
-                    <SelectItem key={cat} value={cat}>
-                      {cat}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {errors.categoria && (
-                <p className="text-sm text-destructive">{errors.categoria.message}</p>
-              )}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {/* Mês */}
-            <div className="space-y-2">
-              <Label>Mês *</Label>
-              <Select
-                value={String(watch("mes"))}
-                onValueChange={(value) => setValue("mes", parseInt(value))}
-              >
-                <SelectTrigger className="bg-secondary border-border">
-                  <SelectValue placeholder="Mês" />
-                </SelectTrigger>
-                <SelectContent>
-                  {meses.map((m) => (
-                    <SelectItem key={m.value} value={String(m.value)}>
-                      {m.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Ano */}
-            <div className="space-y-2">
-              <Label>Ano *</Label>
-              <Select
-                value={String(watch("ano"))}
-                onValueChange={(value) => setValue("ano", parseInt(value))}
-              >
-                <SelectTrigger className="bg-secondary border-border">
-                  <SelectValue placeholder="Ano" />
-                </SelectTrigger>
-                <SelectContent>
-                  {[currentYear - 1, currentYear, currentYear + 1].map((year) => (
-                    <SelectItem key={year} value={String(year)}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            {/* Vencimento */}
-            <div className="space-y-2">
-              <Label>Dia do pagamento</Label>
-              <Input
-                id="vencimento"
-                type="number"
-                min="1"
-                max="31"
-                {...register("vencimento", { valueAsNumber: true })}
-                className="bg-secondary border-border"
-              />
-            </div>
-          </div>
-
-          {/* Cliente (opcional para entradas) */}
-          {tipo === "entrada" && (
-            <div className="space-y-2">
-              <Label>Cliente (opcional)</Label>
-              <Select
-                value={watch("clientId") || ""}
-                onValueChange={(value) => {
-                  setValue("clientId", value);
-                  setValue("referenciaNome", ""); // se escolher da lista, limpa texto
-                }}
-              >
-                <SelectTrigger className="bg-secondary border-border">
-                  <SelectValue placeholder="Vincular a cliente" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.razaoSocial}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
-
-          {/* Nome de referência */}
-          <div className="space-y-2">
-            <Label>
-              {tipo === "entrada"
-                ? "Nome do cliente (se não estiver na lista)"
-                : "Nome do colaborador"}
-            </Label>
-            <Input
-              id="referenciaNome"
-              placeholder={tipo === "entrada" ? "Cliente pagante" : "Colaborador"}
-              {...register("referenciaNome")}
-              className="bg-secondary border-border"
-            />
-            {errors.referenciaNome && (
-              <p className="text-sm text-destructive">{errors.referenciaNome.message}</p>
-            )}
-          </div>
-
-          <div className="flex justify-end gap-3 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose}>
-              Cancelar
-            </Button>
-            <Button type="submit">Registrar</Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </div>
+      )}
+    </>
   );
 }
