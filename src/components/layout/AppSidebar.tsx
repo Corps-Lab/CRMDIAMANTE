@@ -21,6 +21,8 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import logoImage from "@/assets/logo.png";
+import { useAgency } from "@/contexts/AgencyContext";
+import { Badge } from "../ui/badge";
 
 interface NavItem {
   title: string;
@@ -36,7 +38,7 @@ const navItems: NavItem[] = [
   { title: "Contratos", url: "/contratos", icon: FileText },
   { title: "Entradas", url: "/entradas", icon: ArrowDownCircle },
   { title: "Despesas", url: "/despesas", icon: ArrowUpCircle },
-  { title: "Tarefas", url: "/tarefas", icon: CheckSquare, badge: "NOVO" },
+  { title: "Tarefas", url: "/tarefas", icon: CheckSquare },
   { title: "Sugestões e Reclamações", url: "/sugestoes", icon: MessageSquare },
   { title: "Acessos", url: "/acessos", icon: ShieldCheck },
   { title: "Suporte", url: "/suporte", icon: HelpCircle },
@@ -57,6 +59,7 @@ export function AppSidebar({ onClose }: AppSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { isAdmin, user, signOut } = useAuth();
+  const { currentAgency, isIsolated } = useAgency();
 
   const isActive = (url: string) => location.pathname === url;
 
@@ -79,6 +82,9 @@ export function AppSidebar({ onClose }: AppSidebarProps) {
           <div className="flex flex-col">
             <span className="font-bold text-foreground">C.LABS</span>
             <span className="text-sm text-primary">CRM</span>
+            <Badge variant="outline" className="mt-1 w-fit">
+              {currentAgency.name} {isIsolated ? "· isolado" : ""}
+            </Badge>
           </div>
         )}
       </div>

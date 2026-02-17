@@ -25,20 +25,25 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const { clients } = useClients();
   const { user } = useAuth();
 
-  const mapRow = (row: any): Transaction => {
-    const clientName = clients.find((c) => c.id === row.client_id)?.razaoSocial || undefined;
+  const mapRow = (row: Record<string, unknown>): Transaction => {
+    const clientId = typeof row.client_id === "string" ? row.client_id : undefined;
+    const valor = typeof row.valor === "number" ? row.valor : Number(row.valor ?? 0);
+    const mes = typeof row.mes === "number" ? row.mes : Number(row.mes ?? 0);
+    const ano = typeof row.ano === "number" ? row.ano : Number(row.ano ?? 0);
+    const vencimento = typeof row.vencimento === "number" ? row.vencimento : undefined;
+    const clientName = clients.find((c) => c.id === clientId)?.razaoSocial || undefined;
     return {
-      id: row.id,
-      tipo: row.tipo,
-      descricao: row.descricao || "",
-      valor: Number(row.valor),
-      categoria: row.categoria || "",
-      mes: row.mes,
-      ano: row.ano,
-      vencimento: row.vencimento || undefined,
-      clientId: row.client_id || undefined,
+      id: String(row.id),
+      tipo: (row.tipo as Transaction["tipo"]) ?? "entrada",
+      descricao: (row.descricao as string) || "",
+      valor,
+      categoria: (row.categoria as string) || "",
+      mes,
+      ano,
+      vencimento,
+      clientId,
       clientName,
-      createdAt: new Date(row.created_at),
+      createdAt: row.created_at ? new Date(row.created_at as string) : new Date(),
     };
   };
 
@@ -71,8 +76,6 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }, [clients.length, user]);
 
   const addTransaction = async (data: TransactionFormData) => {
-    if (!user) throw new Error("É preciso estar autenticado para registrar transações no Supabase.");
-
     const client = data.clientId ? clients.find((c) => c.id === data.clientId) : null;
     const base: Transaction = {
       id: safeId("txn"),
@@ -90,6 +93,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       createdAt: new Date(),
     };
 
+    if (!user) throw new Error("Usuário não autenticado");
+
     const payload = {
       tipo: base.tipo,
       descricao: base.descricao,
@@ -105,7 +110,6 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       const { data: inserted, error } = await supabase.from("transactions").insert(payload).select("*").single();
       if (error) throw error;
       setTransactions((prev) => [mapRow(inserted), ...prev]);
-      // garante sync com Supabase (ordem/valores)
       refresh();
     } catch (err) {
       console.error("Erro ao salvar transação no Supabase", err);
@@ -114,7 +118,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   };
 
   const removeTransaction = async (id: string) => {
-    if (!user) throw new Error("É preciso estar autenticado para remover transações.");
+    if (!user) throw new Error("Usuário não autenticado");
     try {
       const { error } = await supabase.from("transactions").delete().eq("id", id);
       if (error) throw error;
@@ -127,9 +131,9 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   };
 
   const updateTransaction = async (id: string, data: Partial<TransactionFormData>) => {
-    if (!user) throw new Error("É preciso estar autenticado para atualizar transações.");
+    if (!user) throw new Error("Usuário não autenticado");
 
-    const payload: any = {};
+    const payload: Record<string, unknown> = {};
     if (data.tipo !== undefined) payload.tipo = data.tipo;
     if (data.descricao !== undefined) payload.descricao = data.descricao;
     if (data.valor !== undefined) payload.valor = data.valor;
