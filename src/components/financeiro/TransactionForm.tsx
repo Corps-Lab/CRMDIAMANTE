@@ -32,14 +32,11 @@ const transactionSchema = z
     referenciaNome: z.string().optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.tipo === "entrada" && !data.clientId && !(data.referenciaNome && data.referenciaNome.trim().length >= 2)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["referenciaNome"],
-        message: "Informe o cliente ou selecione da lista",
-      });
-    }
-    if (data.tipo === "despesa" && !(data.referenciaNome && data.referenciaNome.trim().length >= 2)) {
+    // Despesa precisa ter um responsável identificado; entrada é opcional
+    if (
+      data.tipo === "despesa" &&
+      !(data.referenciaNome && data.referenciaNome.trim().length >= 2)
+    ) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ["referenciaNome"],
@@ -69,6 +66,7 @@ export function TransactionForm({
   const { clients } = useClients();
   const currentYear = new Date().getFullYear();
   const defaultMonth = defaultMes || new Date().getMonth() + 1;
+  const safeClients = clients.filter((c) => c.id && c.id.trim() !== "");
 
   const {
     register,
@@ -87,13 +85,13 @@ export function TransactionForm({
       mes: defaultMonth,
       ano: currentYear,
       vencimento: 5,
-      clientId: "",
+      clientId: "none",
       payerType: defaultTipo === "entrada" ? "cliente" : "colaborador",
       referenciaNome: "",
     },
   });
 
-  const tipo = watch("tipo");
+  const tipo = watch("tipo") || "entrada";
 
   // Reaplica defaults toda vez que abrir ou mudar mês/tipo padrão
   useEffect(() => {
@@ -106,7 +104,7 @@ export function TransactionForm({
         mes: defaultMonth,
         ano: currentYear,
         vencimento: 5,
-        clientId: "",
+        clientId: "none",
         payerType: defaultTipo === "entrada" ? "cliente" : "colaborador",
         referenciaNome: "",
       });
@@ -114,14 +112,27 @@ export function TransactionForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, defaultMes, defaultTipo]);
 
-  const handleFormSubmit = (data: TransactionSchemaType) => {
-    onSubmit(data as TransactionFormData);
-    toast({
-      title: data.tipo === "entrada" ? "Entrada registrada!" : "Despesa registrada!",
-      description: `${data.descricao} - R$ ${data.valor.toFixed(2)}`,
-    });
-    reset();
-    onClose();
+  const handleFormSubmit = async (data: TransactionSchemaType) => {
+    const sanitized = {
+      ...data,
+      clientId: data.clientId === "none" ? undefined : data.clientId,
+    } as TransactionFormData;
+
+    try {
+      await onSubmit(sanitized);
+      toast({
+        title: sanitized.tipo === "entrada" ? "Entrada registrada!" : "Despesa registrada!",
+        description: `${sanitized.descricao} - R$ ${sanitized.valor.toFixed(2)}`,
+      });
+      reset();
+      onClose();
+    } catch (err: any) {
+      toast({
+        title: "Erro ao salvar",
+        description: err?.message || "Não foi possível registrar a transação.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleClose = () => {
@@ -133,7 +144,7 @@ export function TransactionForm({
     <>
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 px-3 py-6 sm:px-4">
-          <div className="relative w-full max-w-[520px] sm:max-w-[560px] rounded-xl bg-card border border-border shadow-2xl p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-[620px] sm:max-w-[640px] rounded-2xl bg-card border border-border shadow-2xl p-5 sm:p-6 max-h-[90vh] overflow-y-auto">
             <button
               type="button"
               onClick={handleClose}
@@ -218,12 +229,12 @@ export function TransactionForm({
                     <SelectTrigger className="bg-secondary border-border">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {categorias[tipo].map((cat) => (
-                        <SelectItem key={cat} value={cat}>
-                          {cat}
-                        </SelectItem>
-                      ))}
+                  <SelectContent>
+                    {(categorias[tipo || "entrada"] || []).filter(Boolean).map((cat) => (
+                      <SelectItem key={cat} value={cat}>
+                        {cat}
+                      </SelectItem>
+                    ))}
                     </SelectContent>
                   </Select>
                   {errors.categoria && (
@@ -274,29 +285,14 @@ export function TransactionForm({
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                {/* Vencimento */}
-                <div className="space-y-2">
-                  <Label>Dia do pagamento</Label>
-                  <Input
-                    id="vencimento"
-                    type="number"
-                    min="1"
-                    max="31"
-                    {...register("vencimento", { valueAsNumber: true })}
-                    className="bg-secondary border-border"
-                  />
-                </div>
-              </div>
-
               {/* Cliente (opcional para entradas) */}
               {tipo === "entrada" && (
                 <div className="space-y-2">
                   <Label>Cliente (opcional)</Label>
                   <Select
-                    value={watch("clientId") || ""}
+                    value={watch("clientId") ?? "none"}
                     onValueChange={(value) => {
-                      setValue("clientId", value);
+                      setValue("clientId", value === "none" ? undefined : value);
                       setValue("referenciaNome", ""); // se escolher da lista, limpa texto
                     }}
                   >
@@ -304,8 +300,8 @@ export function TransactionForm({
                       <SelectValue placeholder="Vincular a cliente" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">Nenhum</SelectItem>
-                      {clients.map((client) => (
+                      <SelectItem value="none">Nenhum</SelectItem>
+                      {safeClients.map((client) => (
                         <SelectItem key={client.id} value={client.id}>
                           {client.razaoSocial}
                         </SelectItem>
