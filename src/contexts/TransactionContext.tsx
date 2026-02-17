@@ -19,8 +19,6 @@ interface TransactionContextType {
 
 const TransactionContext = createContext<TransactionContextType | undefined>(undefined);
 
-const storageKey = "crm_mock_transactions";
-
 export function TransactionProvider({ children }: { children: ReactNode }) {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,28 +42,12 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     };
   };
 
-  const persistLocal = (next: Transaction[]) => {
-    try {
-      localStorage.setItem(storageKey, JSON.stringify(next));
-    } catch {
-      /* ignore quota/private mode */
-    }
-  };
-
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      // Sem sessão -> usar armazenamento local
       if (!user) {
-        try {
-          const raw = localStorage.getItem(storageKey);
-          const parsed: Transaction[] = raw ? JSON.parse(raw) : [];
-          setTransactions(parsed.map((t) => ({ ...t, createdAt: new Date(t.createdAt) })));
-        } catch {
-          setTransactions([]);
-        } finally {
-          setLoading(false);
-        }
+        setTransactions([]);
+        setLoading(false);
         return;
       }
 
@@ -88,6 +70,8 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   }, [clients.length, user]);
 
   const addTransaction = async (data: TransactionFormData) => {
+    if (!user) throw new Error("É preciso estar autenticado para registrar transações no Supabase.");
+
     const client = data.clientId ? clients.find((c) => c.id === data.clientId) : null;
     const base: Transaction = {
       id: safeId("txn"),
@@ -105,15 +89,6 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       createdAt: new Date(),
     };
 
-    if (!user) {
-      setTransactions((prev) => {
-        const next = [base, ...prev];
-        persistLocal(next);
-        return next;
-      });
-      return;
-    }
-
     const payload = {
       tipo: base.tipo,
       descricao: base.descricao,
@@ -130,25 +105,13 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       setTransactions((prev) => [mapRow(inserted), ...prev]);
     } catch (err) {
-      console.error("Erro ao salvar transação no Supabase, salvando localmente", err);
-      // fallback local para não perder a transação
-      setTransactions((prev) => {
-        const next = [base, ...prev];
-        persistLocal(next);
-        return next;
-      });
+      console.error("Erro ao salvar transação no Supabase", err);
+      throw err;
     }
   };
 
   const removeTransaction = async (id: string) => {
-    if (!user) {
-      setTransactions((prev) => {
-        const next = prev.filter((t) => t.id !== id);
-        persistLocal(next);
-        return next;
-      });
-      return;
-    }
+    if (!user) throw new Error("É preciso estar autenticado para remover transações.");
     try {
       const { error } = await supabase.from("transactions").delete().eq("id", id);
       if (error) throw error;
@@ -160,14 +123,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   };
 
   const updateTransaction = async (id: string, data: Partial<TransactionFormData>) => {
-    if (!user) {
-      setTransactions((prev) => {
-        const next = prev.map((t) => (t.id === id ? { ...t, ...data } : t));
-        persistLocal(next);
-        return next;
-      });
-      return;
-    }
+    if (!user) throw new Error("É preciso estar autenticado para atualizar transações.");
 
     const payload: any = {};
     if (data.tipo !== undefined) payload.tipo = data.tipo;
