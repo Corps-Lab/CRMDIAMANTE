@@ -28,7 +28,7 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
   const { user } = useAuth();
 
   const mapRow = (row: any): Transaction => {
-    const clientName = clients.find((c) => c.id === row.client_id)?.razaoSocial || row.client_name || undefined;
+    const clientName = clients.find((c) => c.id === row.client_id)?.razaoSocial || undefined;
     return {
       id: row.id,
       tipo: row.tipo,
@@ -40,8 +40,6 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       vencimento: row.vencimento || undefined,
       clientId: row.client_id || undefined,
       clientName,
-      payerType: row.payer_type || undefined,
-      referenciaNome: row.referencia_nome || undefined,
       createdAt: new Date(row.created_at),
     };
   };
@@ -116,25 +114,25 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const { data: inserted, error } = await supabase
-      .from("transactions")
-      .insert({
-        tipo: base.tipo,
-        descricao: base.descricao,
-        valor: base.valor,
-        categoria: base.categoria,
-        mes: base.mes,
-        ano: base.ano,
-        vencimento: base.vencimento,
-        client_id: base.clientId || null,
-        payer_type: base.payerType || null,
-        referencia_nome: base.referenciaNome || null,
-      })
-      .select("*")
-      .single();
+    const payload = {
+      tipo: base.tipo,
+      descricao: base.descricao,
+      valor: base.valor,
+      categoria: base.categoria,
+      mes: base.mes,
+      ano: base.ano,
+      vencimento: base.vencimento,
+      client_id: base.clientId || null,
+    };
 
-    if (error) throw error;
-    setTransactions((prev) => [mapRow(inserted), ...prev]);
+    try {
+      const { data: inserted, error } = await supabase.from("transactions").insert(payload).select("*").single();
+      if (error) throw error;
+      setTransactions((prev) => [mapRow(inserted), ...prev]);
+    } catch (err) {
+      console.error("Erro ao salvar transação", err);
+      throw err;
+    }
   };
 
   const removeTransaction = async (id: string) => {
@@ -146,9 +144,14 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
       });
       return;
     }
-    const { error } = await supabase.from("transactions").delete().eq("id", id);
-    if (error) throw error;
-    setTransactions((prev) => prev.filter((t) => t.id !== id));
+    try {
+      const { error } = await supabase.from("transactions").delete().eq("id", id);
+      if (error) throw error;
+      setTransactions((prev) => prev.filter((t) => t.id !== id));
+    } catch (err) {
+      console.error("Erro ao remover transação", err);
+      throw err;
+    }
   };
 
   const updateTransaction = async (id: string, data: Partial<TransactionFormData>) => {
@@ -170,20 +173,24 @@ export function TransactionProvider({ children }: { children: ReactNode }) {
     if (data.ano !== undefined) payload.ano = data.ano;
     if (data.vencimento !== undefined) payload.vencimento = data.vencimento;
     if (data.clientId !== undefined) payload.client_id = data.clientId;
-    if (data.payerType !== undefined) payload.payer_type = data.payerType;
-    if (data.referenciaNome !== undefined) payload.referencia_nome = data.referenciaNome;
+    // payer/ref not persisted on Supabase schema; skip
 
     if (Object.keys(payload).length === 0) return;
 
-    const { data: updated, error } = await supabase
-      .from("transactions")
-      .update(payload)
-      .eq("id", id)
-      .select("*")
-      .single();
-    if (error) throw error;
+    try {
+      const { data: updated, error } = await supabase
+        .from("transactions")
+        .update(payload)
+        .eq("id", id)
+        .select("*")
+        .single();
+      if (error) throw error;
 
-    setTransactions((prev) => prev.map((t) => (t.id === id ? mapRow(updated) : t)));
+      setTransactions((prev) => prev.map((t) => (t.id === id ? mapRow(updated) : t)));
+    } catch (err) {
+      console.error("Erro ao atualizar transação", err);
+      throw err;
+    }
   };
 
   const getTransactionsByMonth = (mes: number, ano: number) => {
