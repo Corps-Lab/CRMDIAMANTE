@@ -1,17 +1,25 @@
 import { createContext, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { safeId } from "@/lib/safeId";
 import { useAgency } from "./AgencyContext";
+import { isOnlineRuntime } from "@/lib/runtime";
+import {
+  AppRole,
+  getRoleLabel,
+  normalizeRole,
+  toLegacyDbRole,
+} from "@/lib/accessControl";
 
 
 const mockUsers = [
-  { email: 'ceo@clabs.ag', password: 'teste123', nome: 'CEO C.LABS', role: 'ceo' as AppRole },
-  { email: 'colab@clabs.ag', password: 'teste123', nome: 'Colaborador C.LABS', role: 'colaborador' as AppRole },
+  { email: 'ceo@diamante.com.br', password: 'teste123', nome: 'CEO CRM DIAMANTE', role: 'ceo' as AppRole },
+  { email: 'financeiro@diamante.com.br', password: 'teste123', nome: 'Financeiro CRM DIAMANTE', role: 'financeiro' as AppRole },
+  { email: 'vendas@diamante.com.br', password: 'teste123', nome: 'Vendas CRM DIAMANTE', role: 'vendas' as AppRole },
+  { email: 'rh@diamante.com.br', password: 'teste123', nome: 'RH CRM DIAMANTE', role: 'rh' as AppRole },
+  { email: 'engenharia@diamante.com.br', password: 'teste123', nome: 'Engenharia CRM DIAMANTE', role: 'engenharia' as AppRole },
+  { email: 'suporte@diamante.com.br', password: 'teste123', nome: 'Suporte CRM DIAMANTE', role: 'suporte' as AppRole },
 ];
-
-type AppRole = "admin" | "colaborador" | "ceo";
 type LocalUserRecord = {
   id: string;
   email: string;
@@ -21,6 +29,8 @@ type LocalUserRecord = {
   telefone?: string | null;
   cpf?: string | null;
   cargo?: string | null;
+  creci?: string | null;
+  brokerCode?: string | null;
 };
 
 type LocalSessionRecord = { userId: string; email: string; nome: string; role: AppRole };
@@ -32,7 +42,7 @@ interface Profile {
   telefone: string | null;
   cpf?: string | null;
   cargo?: string | null;
-  nivel_acesso?: AppRole | null;
+  nivel_acesso?: AppRole | string | null;
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
@@ -45,7 +55,17 @@ interface AuthContextType {
   role: AppRole | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
-  signUp: (email: string, password: string, nome: string, telefone: string, role: AppRole, cpf?: string, cargo?: string) => Promise<{ error: Error | null }>;
+  signUp: (
+    email: string,
+    password: string,
+    nome: string,
+    telefone: string,
+    role: AppRole,
+    cpf?: string,
+    cargo?: string,
+    creci?: string,
+    brokerCode?: string,
+  ) => Promise<{ error: Error | null; userId?: string | null }>;
   signOut: () => Promise<void>;
   updateProfile: (data: Partial<Profile>) => Promise<{ error: Error | null }>;
   uploadAvatar: (file: File) => Promise<{ url: string | null; error: Error | null }>;
@@ -56,7 +76,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Só usa modo mock se for explicitamente habilitado. Em produção (Pages) usamos sempre Supabase,
 // mesmo que as variáveis não estejam presentes em tempo de build (há fallback hardcoded no client).
-const isMockAuthEnabled = () => import.meta.env.VITE_USE_MOCK_AUTH === "true";
+const isMockAuthEnabled = () =>
+  !isOnlineRuntime && import.meta.env.VITE_USE_MOCK_AUTH === "true";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const { currentAgency, isIsolated } = useAgency();
@@ -86,20 +107,71 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const ensureDefaultCeo = () => {
+  const ensureDefaultMockUsers = () => {
     if (!isIsolated) return;
     const users = loadLocalUsers();
-    if (users.some((u) => u.role === "ceo")) return;
-    const seedUser = {
-      id: safeId("user"),
-      email: `ceo@${currentAgency.id}.ag`,
-      password: "azul123",
-      nome: `CEO ${currentAgency.name}`,
-      role: "ceo" as AppRole,
-      cpf: null,
-      cargo: "CEO",
-    };
-    persistLocalUsers([...users, seedUser]);
+    const defaultUsers: Array<{
+      email: string;
+      nome: string;
+      role: AppRole;
+      cargo: string;
+    }> = [
+      {
+        email: "ceo@diamante.com.br",
+        nome: "CEO CRM DIAMANTE",
+        role: "ceo",
+        cargo: "CEO",
+      },
+      {
+        email: "financeiro@diamante.com.br",
+        nome: "Financeiro CRM DIAMANTE",
+        role: "financeiro",
+        cargo: "Financeiro",
+      },
+      {
+        email: "vendas@diamante.com.br",
+        nome: "Vendas CRM DIAMANTE",
+        role: "vendas",
+        cargo: "Vendas",
+      },
+      {
+        email: "rh@diamante.com.br",
+        nome: "RH CRM DIAMANTE",
+        role: "rh",
+        cargo: "RH",
+      },
+      {
+        email: "engenharia@diamante.com.br",
+        nome: "Engenharia CRM DIAMANTE",
+        role: "engenharia",
+        cargo: "Engenharia",
+      },
+      {
+        email: "suporte@diamante.com.br",
+        nome: "Suporte CRM DIAMANTE",
+        role: "suporte",
+        cargo: "Suporte",
+      },
+    ];
+
+    const nextUsers = [...users];
+    defaultUsers.forEach((seed) => {
+      const exists = nextUsers.some(
+        (u) => u.email.toLowerCase() === seed.email.toLowerCase(),
+      );
+      if (exists) return;
+      nextUsers.push({
+        id: safeId("user"),
+        email: seed.email,
+        password: "azul123",
+        nome: seed.nome,
+        role: seed.role,
+        cpf: null,
+        cargo: seed.cargo,
+      });
+    });
+
+    persistLocalUsers(nextUsers);
   };
 
   const loadLocalSession = (): LocalSessionRecord | null => {
@@ -113,7 +185,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (isIsolated) {
-      ensureDefaultCeo();
+      ensureDefaultMockUsers();
       const stored = loadLocalSession();
       if (stored) {
         const localUser = { id: stored.userId, email: stored.email, user_metadata: { name: stored.nome } } as unknown as User;
@@ -125,13 +197,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           nome: stored.nome,
           telefone: null,
           cpf: null,
-          cargo: stored.role === "ceo" ? "CEO" : stored.role === "admin" ? "Admin" : "Colaborador",
+          cargo: getRoleLabel(stored.role),
           nivel_acesso: stored.role,
           avatar_url: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
-        setRole(stored.role);
+        setRole(normalizeRole(stored.role) ?? "suporte");
       } else {
         setUser(null);
         setSession(null);
@@ -195,7 +267,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (roleError) throw roleError;
-      setRole(roleData?.role ?? null);
+      const roleFromProfile = normalizeRole(profileData?.nivel_acesso);
+      const roleFromUserRoles = normalizeRole(roleData?.role);
+      setRole(roleFromProfile ?? roleFromUserRoles ?? "suporte");
     } catch (error) {
       console.error("Error fetching user data:", error);
     } finally {
@@ -209,6 +283,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const users = loadLocalUsers();
         const found = users.find((u) => u.email === email && u.password === password);
         if (!found) throw new Error("Credenciais inválidas para esta agência");
+        const normalizedRole = normalizeRole(found.role) ?? "suporte";
         const localUser = { id: found.id || safeId("user"), email: found.email, user_metadata: { name: found.nome } } as unknown as User;
         setUser(localUser);
         setSession(null);
@@ -219,16 +294,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           telefone: found.telefone || null,
           cpf: found.cpf || null,
           cargo: found.cargo || null,
-          nivel_acesso: found.role,
+          nivel_acesso: normalizedRole,
           avatar_url: null,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         });
-        setRole(found.role);
+        setRole(normalizedRole);
         try {
           localStorage.setItem(
             localSessionKey,
-            JSON.stringify({ userId: localUser.id, email: found.email, nome: found.nome, role: found.role })
+            JSON.stringify({ userId: localUser.id, email: found.email, nome: found.nome, role: normalizedRole })
           );
         } catch {
           /* ignore */
@@ -243,7 +318,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const mockUser = { id: safeId("user"), email: found.email, user_metadata: { name: found.nome } } as unknown as User;
         setUser(mockUser);
         setSession(null);
-        setProfile({ id: mockUser.id, user_id: mockUser.id, nome: found.nome, telefone: null, avatar_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+        setProfile({
+          id: mockUser.id,
+          user_id: mockUser.id,
+          nome: found.nome,
+          telefone: null,
+          cargo: getRoleLabel(found.role),
+          nivel_acesso: found.role,
+          avatar_url: null,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        });
         setRole(found.role);
         setLoading(false);
         return { error: null };
@@ -260,7 +345,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, nome: string, telefone: string, role: AppRole, cpf?: string, cargo?: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    nome: string,
+    telefone: string,
+    role: AppRole,
+    cpf?: string,
+    cargo?: string,
+    creci?: string,
+    brokerCode?: string,
+  ) => {
     try {
       if (isIsolated) {
         const users = loadLocalUsers();
@@ -273,6 +368,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           telefone: telefone || null,
           cpf: cpf || null,
           cargo: cargo || null,
+          creci: creci || null,
+          brokerCode: brokerCode || null,
           role,
         };
         persistLocalUsers([...users, localUser]);
@@ -301,14 +398,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             /* ignore */
           }
         }
-        return { error: null };
+        return { error: null, userId: localUser.id };
       }
 
       if (isMockAuthEnabled()) {
         mockUsers.push({ email, password, nome, role });
         setRole(role);
         setProfile({ id: safeId("user"), user_id: "mock", nome, telefone: telefone || null, cpf: cpf || null, cargo: cargo || null, nivel_acesso: role, avatar_url: null, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
-        return { error: null };
+        return { error: null, userId: "mock" };
       }
       const redirectUrl = `${window.location.origin}/`;
       
@@ -338,7 +435,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Create user role
       const { error: roleError } = await supabase.from("user_roles").insert({
         user_id: authData.user.id,
-        role,
+        role: toLegacyDbRole(role),
       });
 
       if (roleError) throw roleError;
@@ -354,9 +451,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       }
 
-      return { error: null };
+      return { error: null, userId: authData.user.id };
     } catch (error) {
-      return { error: error as Error };
+      return { error: error as Error, userId: null };
     }
   };
 

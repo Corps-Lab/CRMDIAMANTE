@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
+import { getRoleLabel } from "@/lib/accessControl";
 
 interface HeaderProps {
   totalCaixa: number;
@@ -20,9 +21,9 @@ interface HeaderProps {
 }
 
 const severityToClasses = (sev: "info" | "warn" | "danger") => ({
-  info: "text-primary",
-  warn: "text-yellow-400",
-  danger: "text-red-400"
+  info: "text-info",
+  warn: "text-primary",
+  danger: "text-info"
 }[sev]);
 
 export function Header({ totalCaixa, onMenuClick }: HeaderProps) {
@@ -133,7 +134,7 @@ export function Header({ totalCaixa, onMenuClick }: HeaderProps) {
                 <div className="hidden md:block text-left">
                   <p className="text-sm font-medium text-foreground">{profile?.nome || "Usuário"}</p>
                   <Badge variant="default" className="text-xs">
-                    {role === "ceo" ? "CEO" : role === "admin" ? "Administrador" : "Colaborador"}
+                    {getRoleLabel(role)}
                   </Badge>
                 </div>
                 <ChevronDown className="w-4 h-4 text-muted-foreground hidden md:block" />

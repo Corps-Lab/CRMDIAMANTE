@@ -9,8 +9,8 @@ createRoot(document.getElementById("root")!).render(
   </AgencyProvider>
 );
 
-// PWA: registra service worker (ignora em dev ou se não suportado)
-if ("serviceWorker" in navigator && import.meta.env.PROD) {
+// PWA: registra service worker (ignora em dev e no modo HTML local)
+if ("serviceWorker" in navigator && import.meta.env.PROD && import.meta.env.MODE !== "html") {
   navigator.serviceWorker
     .register(`${import.meta.env.BASE_URL}sw.js`)
     .catch((err) => console.error("SW registration failed", err));

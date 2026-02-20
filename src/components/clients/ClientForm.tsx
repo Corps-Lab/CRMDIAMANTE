@@ -50,6 +50,7 @@ export function ClientForm({
     defaultValues: defaultValues || {
       razaoSocial: "",
       cnpj: "",
+      cpf: "",
       endereco: "",
       valorPago: 0,
       recorrencia: "mensal",
@@ -75,6 +76,14 @@ export function ClientForm({
       .replace(/^(\d{2})\.(\d{3})(\d)/, "$1.$2.$3")
       .replace(/\.(\d{3})(\d)/, ".$1/$2")
       .replace(/(\d{4})(\d)/, "$1-$2");
+  };
+
+  const formatCPF = (value: string) => {
+    const cleaned = value.replace(/\D/g, "").slice(0, 11);
+    return cleaned
+      .replace(/^(\d{3})(\d)/, "$1.$2")
+      .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+      .replace(/(\d{3})(\d{2})$/, "$1-$2");
   };
 
   return (
@@ -117,6 +126,24 @@ export function ClientForm({
               />
               {errors.cnpj && (
                 <p className="text-sm text-destructive">{errors.cnpj.message}</p>
+              )}
+            </div>
+
+            {/* CPF */}
+            <div className="space-y-2">
+              <Label htmlFor="cpf">CPF (opcional)</Label>
+              <Input
+                id="cpf"
+                placeholder="000.000.000-00"
+                {...register("cpf")}
+                onChange={(e) => {
+                  const formatted = formatCPF(e.target.value);
+                  setValue("cpf", formatted);
+                }}
+                className="bg-secondary border-border"
+              />
+              {errors.cpf && (
+                <p className="text-sm text-destructive">{errors.cpf.message}</p>
               )}
             </div>
 

@@ -61,7 +61,7 @@ export function MonthlyGrid({
                 <p
                   className={cn(
                     "text-lg font-bold",
-                    data.saldo >= 0 ? "text-green-400" : "text-red-400"
+                    data.saldo >= 0 ? "text-primary" : "text-info"
                   )}
                 >
                   {formatCurrency(data.saldo)}
@@ -71,15 +71,15 @@ export function MonthlyGrid({
               {isExpanded && (
                 <div className="mt-4 space-y-4" onClick={(e) => e.stopPropagation()}>
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="p-2 rounded bg-green-500/10">
-                      <p className="text-green-400 font-medium">Entradas</p>
-                      <p className="text-lg font-bold text-green-400">
+                    <div className="p-2 rounded bg-primary/10">
+                      <p className="text-primary font-medium">Entradas</p>
+                      <p className="text-lg font-bold text-primary">
                         {formatCurrency(data.totalEntradas)}
                       </p>
                     </div>
-                    <div className="p-2 rounded bg-red-500/10">
-                      <p className="text-red-400 font-medium">Despesas</p>
-                      <p className="text-lg font-bold text-red-400">
+                    <div className="p-2 rounded bg-info/10">
+                      <p className="text-info font-medium">Despesas</p>
+                      <p className="text-lg font-bold text-info">
                         {formatCurrency(data.totalDespesas)}
                       </p>
                     </div>
@@ -88,7 +88,7 @@ export function MonthlyGrid({
                   {/* Entradas List */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium text-green-400">Entradas</p>
+                      <p className="text-sm font-medium text-primary">Entradas</p>
                       <Button
                         size="sm"
                         variant="ghost"
@@ -113,7 +113,7 @@ export function MonthlyGrid({
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-green-400 font-medium">
+                            <span className="text-primary font-medium">
                               +{formatCurrency(t.valor)}
                             </span>
                             <Button
@@ -138,7 +138,7 @@ export function MonthlyGrid({
                   {/* Despesas List */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-medium text-red-400">Despesas</p>
+                      <p className="text-sm font-medium text-info">Despesas</p>
                       <Button
                         size="sm"
                         variant="ghost"
@@ -163,7 +163,7 @@ export function MonthlyGrid({
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
-                            <span className="text-red-400 font-medium">
+                            <span className="text-info font-medium">
                               -{formatCurrency(t.valor)}
                             </span>
                             <Button

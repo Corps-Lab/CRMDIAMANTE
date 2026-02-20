@@ -15,17 +15,17 @@ export function AgencySwitcher({ className, hideBadge }: AgencySwitcherProps) {
     <div className={cn("space-y-1", className)}>
       {!hideBadge && (
         <Badge variant="outline" className="text-xs">
-          Ambiente: {isIsolated ? "Isolado" : "C.LABS"}
+          Ambiente: {isIsolated ? "Mock Local" : "Online"}
         </Badge>
       )}
       <Select value={currentAgency.id} onValueChange={switchAgency}>
-        <SelectTrigger className="h-10">
+        <SelectTrigger className="h-9">
           <SelectValue placeholder="Selecione a agência" />
         </SelectTrigger>
         <SelectContent>
           {agencies.map((agency) => (
             <SelectItem key={agency.id} value={agency.id}>
-              {agency.name} {agency.mode === "isolated" ? "(isolada)" : ""}
+              {agency.name} {agency.mode === "isolated" ? "(mock)" : "(online)"}
             </SelectItem>
           ))}
         </SelectContent>

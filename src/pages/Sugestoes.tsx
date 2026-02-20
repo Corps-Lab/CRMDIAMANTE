@@ -14,7 +14,7 @@ export default function Sugestoes() {
       toast.error("Digite sua sugestão ou reclamação.");
       return;
     }
-    const mailto = `mailto:suporte@clabs.ag?subject=Sugestao/Reclamacao&body=${encodeURIComponent(texto)}`;
+    const mailto = `mailto:suporte@diamante.com.br?subject=Sugestao/Reclamacao&body=${encodeURIComponent(texto)}`;
     window.location.href = mailto;
     toast.success("Abrindo email para enviar sua mensagem.");
   };

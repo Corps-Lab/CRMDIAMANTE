@@ -1,4 +1,4 @@
--- Domain schema update for C.LABS CRM
+-- Domain schema update for CRM DIAMANTE
 -- Adds CEO/manager support, profile metadata, and core app tables
 
 -- Helper to check manager (admin or ceo)

@@ -1,14 +1,14 @@
 {
-  "name": "C.LABS CRM",
-  "short_name": "C.LABS CRM",
-  "start_url": "/C.LABS-CRM/",
+  "name": "CRM DIAMANTE",
+  "short_name": "CRM DIAMANTE",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#050505",
   "theme_color": "#C7F31D",
   "icons": [
-    { "src": "/C.LABS-CRM/icon-32.png", "sizes": "32x32", "type": "image/png" },
-    { "src": "/C.LABS-CRM/icon-180.png", "sizes": "180x180", "type": "image/png" },
-    { "src": "/C.LABS-CRM/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "/C.LABS-CRM/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    { "src": "icon-32.png", "sizes": "32x32", "type": "image/png" },
+    { "src": "icon-180.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png" }
   ]
 }

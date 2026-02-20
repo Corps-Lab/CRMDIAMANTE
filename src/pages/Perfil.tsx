@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { Camera, Loader2, Mail, Phone, User, Shield, BellDot } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useNotifications } from "@/hooks/useNotifications";
+import { getRoleDescription, getRoleLabel, normalizeRole } from "@/lib/accessControl";
 
 export default function Perfil() {
   const { user, profile, role, signOut, updateProfile, uploadAvatar } = useAuth();
@@ -93,7 +94,7 @@ export default function Perfil() {
       .slice(0, 2);
   };
 
-  const effectiveRole = role || profile?.nivel_acesso || "colaborador";
+  const effectiveRole = normalizeRole(role || profile?.nivel_acesso || "colaborador");
 
   return (
     <MainLayout>
@@ -141,11 +142,7 @@ export default function Perfil() {
               <p className="text-muted-foreground">{user?.email}</p>
               <Badge variant={effectiveRole === "admin" || effectiveRole === "ceo" ? "default" : "secondary"} className="mt-2">
                 <Shield className="w-3 h-3 mr-1" />
-                {effectiveRole === "ceo"
-                  ? "CEO"
-                  : effectiveRole === "admin"
-                  ? "Administrador"
-                  : "Colaborador"}
+                {getRoleLabel(effectiveRole)}
               </Badge>
             </div>
           </CardContent>
@@ -211,17 +208,9 @@ export default function Perfil() {
                 Nível de Acesso
               </Label>
               <div className="p-3 rounded-lg bg-muted/50">
-                <p className="font-medium">
-                  {effectiveRole === "ceo"
-                    ? "CEO"
-                    : effectiveRole === "admin"
-                    ? "Administrador"
-                    : "Colaborador"}
-                </p>
+                <p className="font-medium">{getRoleLabel(effectiveRole)}</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {effectiveRole === "ceo" || effectiveRole === "admin"
-                    ? "Você tem acesso total ao sistema, incluindo Dashboard, Clientes, Contratos, Financeiro e Demandas."
-                    : "Você tem acesso às Tarefas e Demandas do sistema."}
+                  {getRoleDescription(effectiveRole)}
                 </p>
               </div>
             </div>

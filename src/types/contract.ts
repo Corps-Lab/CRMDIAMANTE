@@ -15,10 +15,10 @@ export interface Contract {
 export type ContractFormData = Omit<Contract, "id" | "createdAt" | "clientName">;
 
 export const contractStatusOptions = [
-  { value: "ativo", label: "Ativo", color: "bg-green-500/20 text-green-400" },
-  { value: "pendente", label: "Pendente", color: "bg-yellow-500/20 text-yellow-400" },
+  { value: "ativo", label: "Ativo", color: "bg-primary/20 text-primary" },
+  { value: "pendente", label: "Pendente", color: "bg-info/20 text-info" },
   { value: "encerrado", label: "Encerrado", color: "bg-muted text-muted-foreground" },
-  { value: "cancelado", label: "Cancelado", color: "bg-destructive/20 text-destructive" },
+  { value: "cancelado", label: "Cancelado", color: "bg-info/20 text-info" },
 ] as const;
 
 export const contractRecorrenciaOptions = [

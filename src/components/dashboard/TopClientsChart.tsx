@@ -15,9 +15,17 @@ interface ClientData {
 
 interface TopClientsChartProps {
   data: ClientData[];
+  title?: string;
+  subtitle?: string;
+  valueLabel?: string;
 }
 
-export function TopClientsChart({ data }: TopClientsChartProps) {
+export function TopClientsChart({
+  data,
+  title = "Top Faturamento",
+  subtitle = "Maiores faturamentos",
+  valueLabel = "Faturamento",
+}: TopClientsChartProps) {
   const formatCurrency = (value: number) => {
     if (value >= 1000) {
       return `R$ ${(value / 1000).toFixed(1)}k`;
@@ -28,8 +36,8 @@ export function TopClientsChart({ data }: TopClientsChartProps) {
   return (
     <div className="p-6 rounded-xl bg-card border border-border card-glow">
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-primary">Top 10 Clientes</h3>
-        <p className="text-sm text-muted-foreground">Receita por Cliente</p>
+        <h3 className="text-lg font-semibold text-primary">{title}</h3>
+        <p className="text-sm text-muted-foreground">{subtitle}</p>
       </div>
 
       <div className="h-[300px]">
@@ -37,50 +45,50 @@ export function TopClientsChart({ data }: TopClientsChartProps) {
           <AreaChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
             <defs>
               <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(72 90% 53%)" stopOpacity={0.4} />
-                <stop offset="95%" stopColor="hsl(72 90% 53%)" stopOpacity={0.05} />
+                <stop offset="5%" stopColor="hsl(var(--chart-primary))" stopOpacity={0.4} />
+                <stop offset="95%" stopColor="hsl(var(--chart-primary))" stopOpacity={0.05} />
               </linearGradient>
             </defs>
             <CartesianGrid 
               strokeDasharray="3 3" 
-              stroke="hsl(0 0% 18%)" 
+              stroke="hsl(var(--border))"
               vertical={false} 
             />
             <XAxis
               dataKey="name"
-              tick={{ fill: "hsl(0 0% 65%)", fontSize: 12 }}
-              axisLine={{ stroke: "hsl(0 0% 18%)" }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              axisLine={{ stroke: "hsl(var(--border))" }}
               tickLine={false}
             />
             <YAxis
               tickFormatter={formatCurrency}
-              tick={{ fill: "hsl(0 0% 65%)", fontSize: 12 }}
-              axisLine={{ stroke: "hsl(0 0% 18%)" }}
+              tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 12 }}
+              axisLine={{ stroke: "hsl(var(--border))" }}
               tickLine={false}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "hsl(0 0% 7%)",
-                border: "1px solid hsl(0 0% 18%)",
+                backgroundColor: "hsl(var(--card))",
+                border: "1px solid hsl(var(--border))",
                 borderRadius: "8px",
-                color: "hsl(0 0% 98%)",
+                color: "hsl(var(--foreground))",
               }}
               formatter={(value: number) => [
                 new Intl.NumberFormat("pt-BR", {
                   style: "currency",
                   currency: "BRL",
                 }).format(value),
-                "Receita",
+                valueLabel,
               ]}
             />
             <Area
               type="monotone"
               dataKey="value"
-              stroke="hsl(72 90% 53%)"
+              stroke="hsl(var(--chart-primary))"
               strokeWidth={2}
               fill="url(#colorValue)"
-              dot={{ fill: "hsl(72 90% 53%)", strokeWidth: 2, r: 4 }}
-              activeDot={{ r: 6, fill: "hsl(72 90% 53%)" }}
+              dot={{ fill: "hsl(var(--chart-primary))", strokeWidth: 2, r: 4 }}
+              activeDot={{ r: 6, fill: "hsl(var(--chart-primary))" }}
             />
           </AreaChart>
         </ResponsiveContainer>

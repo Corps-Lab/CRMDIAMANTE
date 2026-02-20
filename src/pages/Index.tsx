@@ -4,15 +4,19 @@ import { MetricCard } from "@/components/dashboard/MetricCard";
 import { TopClientsChart } from "@/components/dashboard/TopClientsChart";
 import { RevenueGoalCard } from "@/components/dashboard/RevenueGoalCard";
 import { useClients } from "@/contexts/ClientContext";
-import { DollarSign, CreditCard, TrendingUp, Clock, ExternalLink } from "lucide-react";
+import { DollarSign, CreditCard, TrendingUp, Clock } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
+import { useTransactions } from "@/contexts/TransactionContext";
+import { useDemands } from "@/contexts/DemandContext";
 
 const Index = () => {
-  const { clients, totalFaturamento } = useClients();
+  const { totalFaturamento } = useClients();
+  const { totalEntradas, totalDespesas, getMonthlyTotals } = useTransactions();
+  const { demands } = useDemands();
   const { user } = useAuth();
   const storageKey = useMemo(() => `crm_revenue_goal_${user?.id ?? "anon"}`, [user?.id]);
   const [goal, setGoal] = useState(15000);
+  const currentYear = new Date().getFullYear();
 
   useEffect(() => {
     try {
@@ -34,24 +38,26 @@ const Index = () => {
     }
   }, [goal, storageKey]);
 
-  // Calculate metrics from clients data
+  const monthlyTotals = getMonthlyTotals(currentYear);
+  const faturamentoReal = totalEntradas > 0 ? totalEntradas : totalFaturamento;
+  const receitaLiquidaAno = monthlyTotals.reduce((acc, month) => acc + (month.entradas - month.despesas), 0);
+  const mesesCorridos = new Date().getMonth() + 1;
+  const receitaAnualProjetada = mesesCorridos > 0 ? (receitaLiquidaAno / mesesCorridos) * 12 : receitaLiquidaAno;
+  const pendentes = demands.filter((d) => d.status === "pendente" || d.status === "atrasada").length;
+
   const metricsData = {
-    faturamento: totalFaturamento,
-    despesas: 0,
-    receitaAnual: 0,
-    pendentes: 0,
+    faturamento: faturamentoReal,
+    despesas: totalDespesas,
+    receitaAnual: receitaAnualProjetada,
+    pendentes,
   };
 
-  // Get top clients sorted by value
-  const topClientsData = [...clients]
-    .sort((a, b) => b.valorPago - a.valorPago)
-    .slice(0, 10)
-    .map((client) => ({
-      name: client.razaoSocial.length > 15 
-        ? client.razaoSocial.substring(0, 15) + "..." 
-        : client.razaoSocial,
-      value: client.valorPago,
-    }));
+  const faturamentoChartData = monthlyTotals.map((month) => ({
+    name: ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"][
+      month.mes - 1
+    ],
+    value: month.entradas,
+  }));
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -63,23 +69,6 @@ const Index = () => {
   return (
     <MainLayout totalCaixa={metricsData.faturamento}>
       <div className="space-y-6 animate-fade-in">
-        {/* Acesso rápido CORPS LAB */}
-        <div className="p-4 rounded-xl border border-border bg-card flex items-center justify-between gap-4">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Nova agência isolada</p>
-            <p className="text-lg font-semibold text-primary">Acessar CORPS LAB (PWA)</p>
-            <p className="text-xs text-muted-foreground">
-              Ambiente dedicado com paleta laranja, rodando em /CRMCORPS/.
-            </p>
-          </div>
-          <Button asChild className="gap-2">
-            <a href="https://corps-lab.github.io/CRMCORPS/" target="_blank" rel="noreferrer">
-              Abrir CORPS LAB
-              <ExternalLink className="w-4 h-4" />
-            </a>
-          </Button>
-        </div>
-
         {/* Metrics Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           <MetricCard
@@ -100,7 +89,7 @@ const Index = () => {
           />
           <MetricCard
             title="Pendentes"
-            value={formatCurrency(metricsData.pendentes)}
+            value={new Intl.NumberFormat("pt-BR").format(metricsData.pendentes)}
             icon={<Clock className="w-6 h-6" />}
           />
         </div>
@@ -108,7 +97,12 @@ const Index = () => {
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <TopClientsChart data={topClientsData} />
+            <TopClientsChart
+              data={faturamentoChartData}
+              title={`Faturamento Mensal (${currentYear})`}
+              subtitle="Entradas por mês"
+              valueLabel="Faturamento"
+            />
           </div>
           <div>
           <RevenueGoalCard current={metricsData.faturamento} goal={goal} onEditGoal={(v) => setGoal(v)} />

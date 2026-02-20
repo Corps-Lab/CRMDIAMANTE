@@ -5,7 +5,7 @@ import { Mail, MessageSquare } from "lucide-react";
 
 export default function Suporte() {
   const abrirMailto = () => {
-    window.location.href = "mailto:suporte@clabs.ag?subject=Suporte%20C.LABS%20CRM";
+    window.location.href = "mailto:suporte@diamante.com.br?subject=Suporte%20CRM%20DIAMANTE";
   };
 
   const abrirSlack = () => {
@@ -25,7 +25,7 @@ export default function Suporte() {
             </p>
             <div className="flex gap-3 flex-wrap">
               <Button onClick={abrirMailto} className="gap-2">
-                <Mail className="w-4 h-4" /> Email suporte@clabs.ag
+                <Mail className="w-4 h-4" /> Email suporte@diamante.com.br
               </Button>
               <Button variant="outline" onClick={abrirSlack} className="gap-2">
                 <MessageSquare className="w-4 h-4" /> Slack suporte

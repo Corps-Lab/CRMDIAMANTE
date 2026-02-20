@@ -36,12 +36,13 @@ export function ClientDetails({ client, open, onClose }: ClientDetailsProps) {
 
   const details = [
     { icon: Building2, label: "CNPJ", value: client.cnpj },
+    client.cpf ? { icon: Building2, label: "CPF", value: client.cpf } : null,
     { icon: MapPin, label: "Endereço", value: client.endereco },
     { icon: DollarSign, label: "Valor Pago", value: formatCurrency(client.valorPago) },
     { icon: Calendar, label: "Recorrência", value: recorrenciaLabel[client.recorrencia] },
     { icon: User, label: "Responsável", value: client.responsavel },
     { icon: Phone, label: "Contato Interno", value: client.contatoInterno },
-  ];
+  ].filter(Boolean) as { icon: any; label: string; value: string | number }[];
 
   return (
     <Dialog open={open} onOpenChange={onClose}>

@@ -115,7 +115,7 @@ export default function Contratos() {
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px] bg-card border-border">
+            <SelectTrigger className="w-[160px] bg-card border-border">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Status" />
             </SelectTrigger>

@@ -2,6 +2,7 @@ export interface Client {
   id: string;
   razaoSocial: string;
   cnpj: string;
+  cpf?: string | null;
   endereco: string;
   valorPago: number;
   recorrencia: "mensal" | "trimestral" | "semestral" | "anual";

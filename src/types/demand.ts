@@ -22,15 +22,15 @@ export interface Demand {
 export type DemandFormData = Omit<Demand, "id" | "createdAt" | "clientName">;
 
 export const statusOptions = [
-  { value: "pendente", label: "Pendente", color: "bg-yellow-500/20 text-yellow-400" },
-  { value: "em_andamento", label: "Em Andamento", color: "bg-blue-500/20 text-blue-400" },
-  { value: "concluida", label: "Concluída", color: "bg-green-500/20 text-green-400" },
-  { value: "atrasada", label: "Atrasada", color: "bg-red-500/20 text-red-400" },
+  { value: "pendente", label: "Pendente", color: "bg-primary/20 text-primary" },
+  { value: "em_andamento", label: "Em Andamento", color: "bg-primary/20 text-primary" },
+  { value: "concluida", label: "Concluída", color: "bg-primary/20 text-primary" },
+  { value: "atrasada", label: "Atrasada", color: "bg-info/20 text-info" },
 ] as const;
 
 export const prioridadeOptions = [
   { value: "baixa", label: "Baixa", color: "bg-slate-500/20 text-slate-400" },
-  { value: "media", label: "Média", color: "bg-blue-500/20 text-blue-400" },
+  { value: "media", label: "Média", color: "bg-info/20 text-info" },
   { value: "alta", label: "Alta", color: "bg-orange-500/20 text-orange-400" },
-  { value: "urgente", label: "Urgente", color: "bg-red-500/20 text-red-400" },
+  { value: "urgente", label: "Urgente", color: "bg-info/20 text-info" },
 ] as const;

@@ -3,27 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>C.LABS CRM</title>
-    <meta name="description" content="C.LABS CRM — painel de operações e relacionamento" />
-    <meta name="author" content="C.LABS" />
+    <title>CRM DIAMANTE</title>
+    <meta name="description" content="CRM DIAMANTE — painel de operações e relacionamento" />
+    <meta name="author" content="CRM DIAMANTE" />
 
-    <link rel="manifest" href="/manifest.webmanifest" />
-    <link rel="icon" type="image/png" sizes="32x32" href="/icon-32.png" />
-    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
-    <link rel="apple-touch-icon" href="/icon-180.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" type="image/png" sizes="32x32" href="icon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+    <link rel="apple-touch-icon" href="icon-180.png" />
 
-    <meta property="og:title" content="C.LABS CRM" />
-    <meta property="og:description" content="C.LABS CRM — painel de operações e relacionamento" />
+    <meta property="og:title" content="CRM DIAMANTE" />
+    <meta property="og:description" content="CRM DIAMANTE — painel de operações e relacionamento" />
     <meta property="og:type" content="website" />
-    <meta property="og:image" content="/icon-512.png" />
+    <meta property="og:image" content="icon-512.png" />
 
     <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@clabs" />
-    <meta name="twitter:image" content="/icon-512.png" />
+    <meta name="twitter:image" content="icon-512.png" />
   </head>
 
   <body>
     <div id="root"></div>
+    <script>
+      const isFile = window.location.protocol === "file:";
+      const isRootIndex = /\/index\.html$/i.test(window.location.pathname);
+      const isInsideDist = /\/dist\//i.test(window.location.pathname);
+      if (isFile && isRootIndex && !isInsideDist) {
+        window.location.replace("./dist/index.single.html");
+      }
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

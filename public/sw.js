@@ -1,11 +1,12 @@
-const CACHE_NAME = "clabs-crm-static-v7";
-const OFFLINE_URL = "/C.LABS-CRM/index.html";
+const CACHE_NAME = "crm-diamante-static-v1";
+const BASE_URL = new URL(self.registration.scope).pathname;
+const OFFLINE_URL = `${BASE_URL}index.html`;
 
 self.addEventListener("install", (event) => {
   self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) =>
-      cache.addAll([OFFLINE_URL, "/C.LABS-CRM/", "/C.LABS-CRM/manifest.webmanifest"])
+      cache.addAll([OFFLINE_URL, BASE_URL, `${BASE_URL}manifest.webmanifest`])
     )
   );
 });

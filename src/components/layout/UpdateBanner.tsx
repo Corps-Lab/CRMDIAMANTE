@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw } from "lucide-react";
 
-const STORAGE_KEY = "clabs_app_version";
+const STORAGE_KEY = "crm_diamante_app_version";
 
 export function UpdateBanner() {
   const [show, setShow] = useState(false);

@@ -11,6 +11,12 @@ node_modules
 dist
 dist-ssr
 *.local
+.env
+.env.*
+!.env.example
+supabase/.temp/
+CRM-DIAMANTE.html
+ABRIR_CRM_DIAMANTE.command
 
 # Editor directories and files
 .vscode/*

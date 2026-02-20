@@ -1,9 +1,11 @@
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
+import { canAccessPath, getHomePathForRole } from "@/lib/accessControl";
 
 export function ProtectedRoute() {
-  const { user, loading } = useAuth();
+  const { user, role, loading } = useAuth();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -18,6 +20,10 @@ export function ProtectedRoute() {
 
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  if (role && !canAccessPath(role, location.pathname)) {
+    return <Navigate to={getHomePathForRole(role)} replace />;
   }
 
   return <Outlet />;

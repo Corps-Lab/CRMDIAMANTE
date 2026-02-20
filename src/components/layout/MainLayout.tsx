@@ -2,14 +2,18 @@ import { ReactNode, useState } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { Header } from "./Header";
 import { UpdateBanner } from "./UpdateBanner";
+import { useClients } from "@/contexts/ClientContext";
 
 interface MainLayoutProps {
   children: ReactNode;
   totalCaixa?: number;
 }
 
-export function MainLayout({ children, totalCaixa = 9700 }: MainLayoutProps) {
+export function MainLayout({ children, totalCaixa }: MainLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { totalFaturamento } = useClients();
+  const resolvedTotalCaixa =
+    typeof totalCaixa === "number" ? totalCaixa : totalFaturamento || 0;
 
   return (
     <div className="flex min-h-screen w-full bg-background">
@@ -31,7 +35,7 @@ export function MainLayout({ children, totalCaixa = 9700 }: MainLayoutProps) {
       </div>
 
       <div className="flex flex-col flex-1 overflow-hidden">
-        <Header totalCaixa={totalCaixa ?? 0} onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
+        <Header totalCaixa={resolvedTotalCaixa} onMenuClick={() => setSidebarOpen(!sidebarOpen)} />
         <UpdateBanner />
         <main className="flex-1 overflow-y-auto p-4 md:p-6">
           {children}

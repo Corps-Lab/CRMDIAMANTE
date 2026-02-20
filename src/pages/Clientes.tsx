@@ -22,6 +22,7 @@ export default function Clientes() {
     (client) =>
       client.razaoSocial.toLowerCase().includes(searchTerm.toLowerCase()) ||
       client.cnpj.includes(searchTerm) ||
+      (client.cpf || "").includes(searchTerm) ||
       client.responsavel.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -109,6 +110,7 @@ export default function Clientes() {
               ? {
                   razaoSocial: editingClient.razaoSocial,
                   cnpj: editingClient.cnpj,
+                  cpf: editingClient.cpf || "",
                   endereco: editingClient.endereco,
                   valorPago: editingClient.valorPago,
                   recorrencia: editingClient.recorrencia,

@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Design System: Dark theme with Lime (#C7F31D) accent for CRM/Business Management */
+/* Design System: CRM DIAMANTE palette (orange, dark navy and white). */
 
 /* Base font scaling: fluid 12px (mobile) to 16px (desktop) */
 html {
@@ -11,113 +11,117 @@ html {
 
 @layer base {
   :root {
-    --background: 0 0% 4%;
+    --background: 220 52% 15%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 7%;
+    --card: 220 44% 18%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 7%;
+    --popover: 220 44% 18%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 72 90% 53%;
-    --primary-foreground: 0 0% 2%;
+    --primary: 38 96% 53%;
+    --primary-foreground: 220 52% 15%;
 
-    --secondary: 0 0% 12%;
+    --secondary: 220 34% 22%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 220 24% 26%;
+    --muted-foreground: 0 0% 78%;
 
-    --accent: 72 90% 53%;
-    --accent-foreground: 0 0% 2%;
+    --accent: 38 96% 53%;
+    --accent-foreground: 220 52% 15%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 72 90% 53%;
+    --border: 220 20% 30%;
+    --input: 220 20% 30%;
+    --ring: 38 96% 53%;
 
     --radius: 0.75rem;
 
-    --sidebar-background: 0 0% 6%;
-    --sidebar-foreground: 0 0% 75%;
-    --sidebar-primary: 72 90% 53%;
-    --sidebar-primary-foreground: 0 0% 2%;
-    --sidebar-accent: 0 0% 12%;
+    --sidebar-background: 220 55% 13%;
+    --sidebar-foreground: 0 0% 86%;
+    --sidebar-primary: 38 96% 53%;
+    --sidebar-primary-foreground: 220 52% 15%;
+    --sidebar-accent: 220 30% 20%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 72 90% 53%;
+    --sidebar-border: 220 22% 24%;
+    --sidebar-ring: 38 96% 53%;
 
     /* Custom tokens */
-    --success: 142 76% 36%;
+    --success: 38 96% 53%;
     --success-foreground: 0 0% 98%;
-    --warning: 38 92% 50%;
+    --info: 210 86% 66%;
+    --info-foreground: 220 52% 15%;
+    --warning: 42 95% 58%;
     --warning-foreground: 0 0% 2%;
-    --chart-primary: 72 90% 53%;
-    --chart-gradient-start: 72 90% 53%;
-    --chart-gradient-end: 72 90% 45%;
-    --glow-primary: 72 90% 53% / 0.2;
+    --chart-primary: 38 96% 53%;
+    --chart-gradient-start: 38 96% 53%;
+    --chart-gradient-end: 30 100% 45%;
+    --glow-primary: 38 96% 53% / 0.22;
 
     /* Auth/backdrop glows */
-    --auth-glow-1: rgba(124, 58, 237, 0.18);
-    --auth-glow-2: rgba(139, 92, 246, 0.22);
-    --auth-bg-1: #050505;
-    --auth-bg-2: #0d0d12;
+    --auth-glow-1: rgba(247, 166, 23, 0.14);
+    --auth-glow-2: rgba(19, 33, 60, 0.36);
+    --auth-bg-1: #13213c;
+    --auth-bg-2: #0f1b33;
   }
 
   .dark {
-    --background: 0 0% 4%;
+    --background: 220 52% 15%;
     --foreground: 0 0% 98%;
 
-    --card: 0 0% 7%;
+    --card: 220 44% 18%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 0 0% 7%;
+    --popover: 220 44% 18%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 72 90% 53%;
-    --primary-foreground: 0 0% 2%;
+    --primary: 38 96% 53%;
+    --primary-foreground: 220 52% 15%;
 
-    --secondary: 0 0% 12%;
+    --secondary: 220 34% 22%;
     --secondary-foreground: 0 0% 98%;
 
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 70%;
+    --muted: 220 24% 26%;
+    --muted-foreground: 0 0% 78%;
 
-    --accent: 72 90% 53%;
-    --accent-foreground: 0 0% 2%;
+    --accent: 38 96% 53%;
+    --accent-foreground: 220 52% 15%;
 
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 98%;
+    --info: 210 86% 66%;
+    --info-foreground: 220 52% 15%;
 
-    --border: 0 0% 18%;
-    --input: 0 0% 18%;
-    --ring: 72 90% 53%;
+    --border: 220 20% 30%;
+    --input: 220 20% 30%;
+    --ring: 38 96% 53%;
 
-    --sidebar-background: 0 0% 6%;
-    --sidebar-foreground: 0 0% 75%;
-    --sidebar-primary: 72 90% 53%;
-    --sidebar-primary-foreground: 0 0% 2%;
-    --sidebar-accent: 0 0% 12%;
+    --sidebar-background: 220 55% 13%;
+    --sidebar-foreground: 0 0% 86%;
+    --sidebar-primary: 38 96% 53%;
+    --sidebar-primary-foreground: 220 52% 15%;
+    --sidebar-accent: 220 30% 20%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 0 0% 15%;
-    --sidebar-ring: 72 90% 53%;
+    --sidebar-border: 220 22% 24%;
+    --sidebar-ring: 38 96% 53%;
   }
 
   :root[data-agency="sky"] {
-    --primary: 199 92% 60%;
-    --accent: 199 92% 60%;
-    --sidebar-primary: 199 92% 60%;
-    --chart-primary: 199 92% 60%;
-    --chart-gradient-start: 199 92% 60%;
-    --chart-gradient-end: 199 90% 52%;
-    --glow-primary: 199 92% 60% / 0.25;
-    --auth-glow-1: rgba(56, 189, 248, 0.18);
-    --auth-glow-2: rgba(14, 165, 233, 0.25);
-    --auth-bg-1: #020915;
-    --auth-bg-2: #0b1622;
+    --primary: 38 96% 53%;
+    --accent: 38 96% 53%;
+    --sidebar-primary: 38 96% 53%;
+    --chart-primary: 38 96% 53%;
+    --chart-gradient-start: 38 96% 53%;
+    --chart-gradient-end: 30 100% 45%;
+    --glow-primary: 38 96% 53% / 0.22;
+    --auth-glow-1: rgba(247, 166, 23, 0.14);
+    --auth-glow-2: rgba(19, 33, 60, 0.36);
+    --auth-bg-1: #13213c;
+    --auth-bg-2: #0f1b33;
   }
 }
 
@@ -142,7 +146,11 @@ html {
   }
 
   .text-gradient {
-    background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(72 90% 60%) 100%);
+    background: linear-gradient(
+      135deg,
+      hsl(var(--chart-gradient-start)) 0%,
+      hsl(var(--chart-gradient-end)) 100%
+    );
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;

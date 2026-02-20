@@ -1,4 +1,5 @@
 import { createContext, ReactNode, useContext, useEffect, useMemo, useState } from "react";
+import { isOnlineRuntime } from "@/lib/runtime";
 
 export type AgencyMode = "shared" | "isolated";
 
@@ -27,29 +28,18 @@ interface AgencyContextType {
 
 const agencies: AgencyConfig[] = [
   {
-    id: "clabs",
-    name: "C.LABS",
-    mode: "shared",
-    description: "Acesso padrão do CRM C.LABS",
+    id: "diamante",
+    name: "CRM Diamante",
+    mode: isOnlineRuntime ? "shared" : "isolated",
+    description: isOnlineRuntime
+      ? "Ambiente online conectado ao Supabase."
+      : "Ambiente local em modo mock (sem dependencia de Supabase).",
     theme: {
-      primary: "72 90% 53%",
-      accent: "72 90% 53%",
-      chartStart: "72 90% 53%",
-      chartEnd: "72 90% 45%",
-      glow: "72 90% 53% / 0.20",
-    },
-  },
-  {
-    id: "sky",
-    name: "Agência Céu",
-    description: "Acesso isolado com paleta azul céu e dados zerados",
-    mode: "isolated",
-    theme: {
-      primary: "199 92% 60%",
-      accent: "199 92% 60%",
-      chartStart: "199 92% 60%",
-      chartEnd: "199 90% 52%",
-      glow: "199 92% 60% / 0.25",
+      primary: "38 96% 53%",
+      accent: "38 96% 53%",
+      chartStart: "38 96% 53%",
+      chartEnd: "30 100% 45%",
+      glow: "38 96% 53% / 0.22",
     },
   },
 ];

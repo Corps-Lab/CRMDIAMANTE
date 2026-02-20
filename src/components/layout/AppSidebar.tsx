@@ -8,48 +8,62 @@ import {
   ArrowUpCircle,
   CheckSquare,
   MessageSquare,
-  CreditCard,
   ShieldCheck,
   HelpCircle,
-  Trash2,
   ChevronLeft,
   ChevronRight,
   User,
   LogOut,
   LogIn,
+  Truck,
+  Building2,
+  FileSignature,
+  Calculator,
+  Wrench,
+  CalendarClock,
+  ClipboardCheck,
+  HelpCircle as QuestionIcon,
+  Upload,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import logoImage from "@/assets/logo.png";
 import { useAgency } from "@/contexts/AgencyContext";
 import { Badge } from "../ui/badge";
+import { AccessPermission, canAccessPermission } from "@/lib/accessControl";
 
 interface NavItem {
   title: string;
   url: string;
   icon: React.ElementType;
   badge?: string;
-  adminOnly?: boolean;
+  permission: AccessPermission;
 }
 
 const navItems: NavItem[] = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "Clientes", url: "/clientes", icon: Users },
-  { title: "Contratos", url: "/contratos", icon: FileText },
-  { title: "Entradas", url: "/entradas", icon: ArrowDownCircle },
-  { title: "Despesas", url: "/despesas", icon: ArrowUpCircle },
-  { title: "Tarefas", url: "/tarefas", icon: CheckSquare },
-  { title: "Sugestões e Reclamações", url: "/sugestoes", icon: MessageSquare },
-  { title: "Acessos", url: "/acessos", icon: ShieldCheck },
-  { title: "Suporte", url: "/suporte", icon: HelpCircle },
+  { title: "Dashboard", url: "/", icon: LayoutDashboard, permission: "dashboard" },
+  { title: "Clientes", url: "/clientes", icon: Users, permission: "clientes" },
+  { title: "Fornecedores", url: "/fornecedores", icon: Truck, permission: "fornecedores" },
+  { title: "Obras", url: "/obras", icon: Building2, permission: "obras" },
+  { title: "Funil de Vendas", url: "/funil", icon: FileSignature, permission: "funil" },
+  { title: "Simulador CAIXA", url: "/simulador-caixa", icon: Calculator, permission: "simulador" },
+  { title: "Assistência Técnica", url: "/assistencia", icon: Wrench, permission: "assistencia" },
+  { title: "Diário de Obra (RDO)", url: "/rdo", icon: CalendarClock, permission: "rdo" },
+  { title: "RFIs", url: "/rfis", icon: QuestionIcon, permission: "rfis" },
+  { title: "Vistorias", url: "/vistorias", icon: ClipboardCheck, permission: "vistorias" },
+  { title: "Importar CSV", url: "/importar", icon: Upload, permission: "importar" },
+  { title: "Contratos", url: "/contratos", icon: FileText, permission: "contratos" },
+  { title: "Entradas", url: "/entradas", icon: ArrowDownCircle, permission: "financeiro" },
+  { title: "Despesas", url: "/despesas", icon: ArrowUpCircle, permission: "financeiro" },
+  { title: "Tarefas", url: "/tarefas", icon: CheckSquare, permission: "tarefas" },
+  { title: "Sugestões e Reclamações", url: "/sugestoes", icon: MessageSquare, permission: "sugestoes" },
+  { title: "Acessos", url: "/acessos", icon: ShieldCheck, permission: "acessos" },
+  { title: "Suporte", url: "/suporte", icon: HelpCircle, permission: "suporte" },
 ];
 
 const bottomItems: NavItem[] = [
-  { title: "Meu Perfil", url: "/perfil", icon: User },
-  { title: "Excluir Dados", url: "/excluir", icon: Trash2, adminOnly: true },
+  { title: "Meu Perfil", url: "/perfil", icon: User, permission: "perfil" },
 ];
-
-// Filter items - show all items except adminOnly ones (unless user is admin)
 
 interface AppSidebarProps {
   onClose?: () => void;
@@ -58,14 +72,13 @@ interface AppSidebarProps {
 export function AppSidebar({ onClose }: AppSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
-  const { isAdmin, user, signOut } = useAuth();
+  const { role, user, signOut } = useAuth();
   const { currentAgency, isIsolated } = useAgency();
 
   const isActive = (url: string) => location.pathname === url;
 
-  // Show all items freely, only hide adminOnly items for non-admins
   const filterByRole = (items: NavItem[]) => {
-    return items.filter((item) => !item.adminOnly || isAdmin);
+    return items.filter((item) => canAccessPermission(role, item.permission));
   };
 
   return (
@@ -77,13 +90,13 @@ export function AppSidebar({ onClose }: AppSidebarProps) {
     >
       {/* Logo */}
       <div className="flex items-center gap-3 p-4 border-b border-sidebar-border">
-        <img src={logoImage} alt="C.LABS" className="w-10 h-10 object-contain" />
+        <img src={logoImage} alt="CRM DIAMANTE" className="w-10 h-10 object-contain" />
         {!collapsed && (
           <div className="flex flex-col">
-            <span className="font-bold text-foreground">C.LABS</span>
-            <span className="text-sm text-primary">CRM</span>
+            <span className="font-bold text-foreground">CRM DIAMANTE</span>
+            <span className="text-sm text-primary">Painel</span>
             <Badge variant="outline" className="mt-1 w-fit">
-              {currentAgency.name} {isIsolated ? "· isolado" : ""}
+              {currentAgency.name} {isIsolated ? "· mock local" : "· online"}
             </Badge>
           </div>
         )}

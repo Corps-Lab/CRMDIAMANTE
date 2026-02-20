@@ -71,7 +71,7 @@ export function ClientTable({ clients, onEdit, onDelete, onView }: ClientTablePr
           <TableHeader>
             <TableRow className="bg-secondary/50 hover:bg-secondary/50">
               <TableHead className="text-muted-foreground font-semibold">Razão Social</TableHead>
-              <TableHead className="text-muted-foreground font-semibold">CNPJ</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Documentos</TableHead>
               <TableHead className="text-muted-foreground font-semibold">Responsável</TableHead>
               <TableHead className="text-muted-foreground font-semibold">Valor</TableHead>
               <TableHead className="text-muted-foreground font-semibold">Recorrência</TableHead>
@@ -90,7 +90,12 @@ export function ClientTable({ clients, onEdit, onDelete, onView }: ClientTablePr
                 <TableCell className="font-medium text-foreground">
                   {client.razaoSocial}
                 </TableCell>
-                <TableCell className="text-muted-foreground">{client.cnpj}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  <div className="flex flex-col">
+                    <span>{client.cnpj}</span>
+                    {client.cpf && <span className="text-xs text-muted-foreground">CPF: {client.cpf}</span>}
+                  </div>
+                </TableCell>
                 <TableCell className="text-muted-foreground">{client.responsavel}</TableCell>
                 <TableCell className="text-primary font-semibold">
                   {formatCurrency(client.valorPago)}

@@ -11,6 +11,8 @@ export interface Transaction {
   referenciaNome?: string; // nome do cliente ou colaborador
   clientId?: string;
   clientName?: string;
+  originSaleId?: string | null;
+  originType?: "manual" | "venda" | "comissao" | "outro" | null;
   createdAt: Date;
 }
 

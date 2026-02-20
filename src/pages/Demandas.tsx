@@ -117,15 +117,15 @@ export default function Demandas() {
           </div>
           <div className="p-4 rounded-xl bg-card border border-border">
             <p className="text-sm text-muted-foreground">Pendentes</p>
-            <p className="text-2xl font-bold text-yellow-400">{stats.pendentes}</p>
+            <p className="text-2xl font-bold text-info">{stats.pendentes}</p>
           </div>
           <div className="p-4 rounded-xl bg-card border border-border">
             <p className="text-sm text-muted-foreground">Em Andamento</p>
-            <p className="text-2xl font-bold text-blue-400">{stats.emAndamento}</p>
+            <p className="text-2xl font-bold text-primary">{stats.emAndamento}</p>
           </div>
           <div className="p-4 rounded-xl bg-card border border-border">
             <p className="text-sm text-muted-foreground">Concluídas</p>
-            <p className="text-2xl font-bold text-green-400">{stats.concluidas}</p>
+            <p className="text-2xl font-bold text-primary">{stats.concluidas}</p>
           </div>
         </div>
 
@@ -141,7 +141,7 @@ export default function Demandas() {
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-[180px] bg-card border-border">
+            <SelectTrigger className="w-[160px] bg-card border-border">
               <Filter className="w-4 h-4 mr-2" />
               <SelectValue placeholder="Status" />
             </SelectTrigger>

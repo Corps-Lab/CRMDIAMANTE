@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAgency } from "@/contexts/AgencyContext";
@@ -6,25 +6,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import logoImage from "@/assets/logo.png";
-import { Mail, Lock, Eye, EyeOff, ExternalLink } from "lucide-react";
-import { AgencySwitcher } from "@/components/agency/AgencySwitcher";
+import { Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [nome, setNome] = useState("");
-  const [telefone, setTelefone] = useState("");
-  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const { signIn, signUp, user } = useAuth();
-  const { currentAgency, isIsolated } = useAgency();
+  const { signIn, user } = useAuth();
+  const { currentAgency, switchAgency } = useAgency();
   const navigate = useNavigate();
-  const emailPlaceholder = currentAgency.id === "clabs" ? "squad@clabs.ag" : "ceo@agenciaceu.ag";
+
+  useEffect(() => {
+    // Keep authentication fixed to the main Diamante workspace.
+    if (currentAgency.id !== "diamante") {
+      switchAgency("diamante");
+    }
+  }, [currentAgency.id, switchAgency]);
 
   // If already logged in, redirect
   if (user) {
@@ -36,33 +36,19 @@ export default function Auth() {
     e.preventDefault();
     setLoading(true);
 
-    if (isLogin) {
-      const { error } = await signIn(email, password);
-      if (error) {
-        toast.error(error.message || "Erro ao fazer login");
-      } else {
-        toast.success("Login realizado com sucesso!");
-        navigate("/");
-      }
+    const { error } = await signIn(email, password);
+    if (error) {
+      toast.error(error.message || "Erro ao fazer login");
     } else {
-      if (!nome.trim()) {
-        toast.error("Informe seu nome");
-        setLoading(false);
-        return;
-      }
-      const { error } = await signUp(email, password, nome, telefone, "admin", undefined, undefined);
-      if (error) {
-        toast.error(error.message || "Erro ao criar conta");
-      } else {
-        toast.success("Conta criada! Verifique seu e-mail para confirmar.");
-      }
+      toast.success("Login realizado com sucesso!");
+      navigate("/");
     }
 
     setLoading(false);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-10 sm:px-6 relative overflow-hidden bg-[#050505]">
+    <div className="min-h-screen flex items-center justify-center px-4 py-10 sm:px-6 relative overflow-hidden bg-background">
       <div
         className="absolute inset-0 -z-10"
         style={{
@@ -76,16 +62,19 @@ export default function Auth() {
       <Card className="w-full max-w-md border border-primary/30 bg-black/40 backdrop-blur-xl shadow-xl shadow-primary/20">
         <CardHeader className="text-center space-y-3 pb-3">
           <div className="flex justify-center">
-            <img src={logoImage} alt="C.LABS" className="w-20 h-20 object-contain" />
+            <img src={logoImage} alt="CRM DIAMANTE" className="w-20 h-20 object-contain" />
           </div>
           <CardTitle className="text-2xl text-white">Acesso seguro</CardTitle>
           <CardDescription className="text-sm text-muted-foreground">
-            Selecione a agência para entrar. O ambiente “Agência Céu” é isolado e começa zerado.
+            Faça login para acessar o CRM DIAMANTE.
           </CardDescription>
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <AgencySwitcher />
+          <div className="inline-flex items-center rounded-full border border-primary/40 bg-primary/10 px-3 py-1 text-xs text-primary">
+            Ambiente: CRM DIAMANTE
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm text-white">E-mail</Label>
@@ -98,7 +87,7 @@ export default function Auth() {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={emailPlaceholder}
+                  placeholder="suporte@diamante.com.br"
                   required
                   className="h-12 pl-12 pr-4 text-base bg-black/40 border-primary/40 focus-visible:ring-primary"
                 />
@@ -132,11 +121,6 @@ export default function Auth() {
               </div>
             </div>
 
-            <div className="flex items-center gap-3 pl-1">
-              <Checkbox id="remember" checked={remember} onCheckedChange={(v) => setRemember(!!v)} className="border-primary/60 data-[state=checked]:bg-primary data-[state=checked]:text-black" />
-              <Label htmlFor="remember" className="text-sm text-white">Manter conectado</Label>
-            </div>
-
             <Button
               type="submit"
               className="w-full h-12 text-base font-semibold bg-primary text-black hover:bg-primary/90 shadow-lg shadow-primary/30"
@@ -146,32 +130,13 @@ export default function Auth() {
             </Button>
           </form>
 
-          {isIsolated && (
-            <div className="rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs text-primary">
-              Ambiente isolado: acesso inicial CEO {`ceo@${currentAgency.id}.ag`} / azul123. Você pode criar novos acessos em “Acessos”.
-            </div>
-          )}
-
           <div className="text-sm text-muted-foreground">
-            Precisa de ajuda? <a className="font-semibold underline" href="mailto:suporte@clabs.ag">suporte@clabs.ag</a>
+            Precisa de ajuda? <a className="font-semibold underline" href="mailto:suporte@diamante.com.br">suporte@diamante.com.br</a>
           </div>
 
           <p className="text-xs text-muted-foreground leading-relaxed">
             A criação de usuários é feita somente no dashboard do ADM. Se não tiver acesso, abra um chamado interno.
           </p>
-
-          <div className="border border-border rounded-lg p-3 bg-secondary/40 space-y-2">
-            <div className="text-sm text-white font-semibold">CORPS LAB (PWA)</div>
-            <p className="text-xs text-muted-foreground leading-snug">
-              App laranja isolado. Acesse pelo atalho abaixo.
-            </p>
-            <Button asChild variant="outline" className="w-full gap-2">
-              <a href="https://corps-lab.github.io/CRMCORPS/" target="_blank" rel="noreferrer">
-                Abrir CORPS LAB
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </Button>
-          </div>
         </CardContent>
       </Card>
     </div>

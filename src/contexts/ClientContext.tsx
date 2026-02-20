@@ -56,6 +56,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
             recorrencia: c.recorrencia,
             responsavel: c.responsavel || "",
             contatoInterno: c.contato_interno || "",
+            cpf: c.cpf || null,
             createdAt: new Date(c.created_at),
           })) || [];
         setClients(mapped);
@@ -81,6 +82,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         recorrencia: data.recorrencia,
         responsavel: data.responsavel,
         contatoInterno: data.contatoInterno,
+        cpf: data.cpf || null,
         createdAt: new Date(),
       };
       setClients((prev) => {
@@ -101,6 +103,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         recorrencia: data.recorrencia,
         responsavel: data.responsavel,
         contato_interno: data.contatoInterno,
+        cpf: data.cpf,
       })
       .select()
       .single();
@@ -114,6 +117,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
       recorrencia: inserted.recorrencia,
       responsavel: inserted.responsavel || "",
       contatoInterno: inserted.contato_interno || "",
+      cpf: inserted.cpf || null,
       createdAt: new Date(inserted.created_at),
     };
     setClients((prev) => [mapped, ...prev]);
@@ -142,6 +146,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
                 ...client,
                 razaoSocial: data.razaoSocial,
                 cnpj: data.cnpj,
+                cpf: data.cpf || null,
                 endereco: data.endereco,
                 valorPago: data.valorPago,
                 recorrencia: data.recorrencia,
@@ -166,6 +171,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
         recorrencia: data.recorrencia,
         responsavel: data.responsavel,
         contato_interno: data.contatoInterno,
+        cpf: data.cpf,
       })
       .eq("id", id)
       .select()
@@ -183,6 +189,7 @@ export function ClientProvider({ children }: { children: ReactNode }) {
               recorrencia: updated.recorrencia,
               responsavel: updated.responsavel || "",
               contatoInterno: updated.contato_interno || "",
+              cpf: updated.cpf || null,
               createdAt: new Date(updated.created_at),
             }
           : client
