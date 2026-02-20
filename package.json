@@ -13,5 +13,10 @@
     "db:reset": "supabase db reset",
     "supabase:functions:serve": "supabase functions serve",
     "deploy:functions": "supabase functions deploy client-login && supabase functions deploy contract-select && supabase functions deploy signed-url && supabase functions deploy global-search && supabase functions deploy sync-client-from-crm"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.24",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.17"
   }
 }
