@@ -128,6 +128,7 @@ const PATH_PERMISSION_MAP: Record<string, AccessPermission> = {
   "/acessos": "acessos",
   "/sugestoes": "sugestoes",
   "/suporte": "suporte",
+  "/portal-cliente": "suporte",
   "/perfil": "perfil",
   "/progresso": "progresso",
 };

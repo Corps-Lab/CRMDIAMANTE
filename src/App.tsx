@@ -34,6 +34,7 @@ import Acessos from "./pages/Acessos";
 import Sugestoes from "./pages/Sugestoes";
 import Suporte from "./pages/Suporte";
 import Progress from "./pages/Progress";
+import PortalCliente from "./pages/PortalCliente";
 
 import Auth from "./pages/Auth";
 import Perfil from "./pages/Perfil";
@@ -88,6 +89,7 @@ const App = () => (
                               <Route path="/progresso" element={<Progress />} />
                             </Route>
                             <Route path="/auth" element={<Auth />} />
+                            <Route path="/portal-cliente" element={<PortalCliente />} />
                             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                             <Route path="*" element={<NotFound />} />
                           </Routes>

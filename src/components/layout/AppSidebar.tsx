@@ -24,6 +24,7 @@ import {
   ClipboardCheck,
   HelpCircle as QuestionIcon,
   Upload,
+  Smartphone,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -59,6 +60,7 @@ const navItems: NavItem[] = [
   { title: "Sugestões e Reclamações", url: "/sugestoes", icon: MessageSquare, permission: "sugestoes" },
   { title: "Acessos", url: "/acessos", icon: ShieldCheck, permission: "acessos" },
   { title: "Suporte", url: "/suporte", icon: HelpCircle, permission: "suporte" },
+  { title: "Portal do Cliente", url: "/portal-cliente", icon: Smartphone, permission: "suporte" },
 ];
 
 const bottomItems: NavItem[] = [
