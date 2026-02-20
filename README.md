@@ -67,7 +67,37 @@ No CRM, abra `Importar CSV` e use a secao **Sincronizar clientes via Notion** pa
 2. Carregar previa;
 3. Importar para clientes.
 
-## 5) Hospedagem
+## 5) Integracao WhatsApp (assistencia, cobranca e leads de anuncio)
+
+Edge Function adicionada: `whatsapp-gateway`.
+
+Deploy da function:
+
+```bash
+supabase functions deploy whatsapp-gateway --project-ref vrijkozdsituzznxhttx
+```
+
+Secrets para envio real pelo Meta WhatsApp Cloud API:
+
+```bash
+supabase secrets set WHATSAPP_TOKEN=seu_token_meta --project-ref vrijkozdsituzznxhttx
+supabase secrets set WHATSAPP_PHONE_NUMBER_ID=seu_phone_number_id --project-ref vrijkozdsituzznxhttx
+supabase secrets set WHATSAPP_VERIFY_TOKEN=seu_verify_token_webhook --project-ref vrijkozdsituzznxhttx
+supabase secrets set WHATSAPP_DEFAULT_COUNTRY=55 --project-ref vrijkozdsituzznxhttx
+```
+
+Webhook para configurar no Meta:
+
+```txt
+https://vrijkozdsituzznxhttx.functions.supabase.co/whatsapp-gateway
+```
+
+No CRM:
+- Assistencia Tecnica: botao `WhatsApp` em cada chamado.
+- Financeiro: botao de cobranca por WhatsApp nas entradas mensais.
+- Funil de Vendas: card com endpoint para leads de anuncio via WhatsApp.
+
+## 6) Hospedagem
 
 ### Vercel
 
@@ -90,7 +120,7 @@ O arquivo `vercel.json` ja inclui rewrite SPA.
 - publish `dist`
 - redirect SPA para `index.html`
 
-## 6) Simulador CAIXA oficial
+## 7) Simulador CAIXA oficial
 
 O frontend usa `VITE_CAIXA_PROXY_BASE` (padrao `/api/caixa`) para consultar o simulador oficial.
 

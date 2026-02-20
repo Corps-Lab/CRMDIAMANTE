@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Transaction, meses } from "@/types/transaction";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2 } from "lucide-react";
+import { MessageCircle, Plus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface MonthlyGridProps {
@@ -9,6 +9,8 @@ interface MonthlyGridProps {
   ano: number;
   onAddTransaction: (mes: number, tipo: "entrada" | "despesa") => void;
   onRemoveTransaction: (id: string) => void;
+  onSendCharge?: (transaction: Transaction) => void;
+  sendingChargeId?: string | null;
 }
 
 export function MonthlyGrid({
@@ -16,6 +18,8 @@ export function MonthlyGrid({
   ano,
   onAddTransaction,
   onRemoveTransaction,
+  onSendCharge,
+  sendingChargeId,
 }: MonthlyGridProps) {
   const [expandedMonth, setExpandedMonth] = useState<number | null>(null);
 
@@ -113,6 +117,22 @@ export function MonthlyGrid({
                             </p>
                           </div>
                           <div className="flex items-center gap-2">
+                            {onSendCharge && (
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6"
+                                onClick={() => onSendCharge(t)}
+                                title="Cobrar no WhatsApp"
+                                disabled={sendingChargeId === t.id}
+                              >
+                                {sendingChargeId === t.id ? (
+                                  <span className="text-[10px] text-primary">...</span>
+                                ) : (
+                                  <MessageCircle className="w-3 h-3 text-primary" />
+                                )}
+                              </Button>
+                            )}
                             <span className="text-primary font-medium">
                               +{formatCurrency(t.valor)}
                             </span>

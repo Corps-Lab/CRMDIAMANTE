@@ -11,8 +11,9 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Wrench, Plus } from "lucide-react";
+import { Wrench, Plus, MessageCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { sendAssistenciaWhatsApp } from "@/lib/whatsapp";
 
 const statusLabel: Record<Ticket["status"], string> = {
   aberto: "Aberto",
@@ -32,6 +33,7 @@ export default function Assistencia() {
   const { tickets, addTicket, updateTicket, removeTicket, loading } = useAssist();
   const [isFormOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Ticket | null>(null);
+  const [sendingTicketId, setSendingTicketId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const { toast } = useToast();
 
@@ -77,6 +79,38 @@ export default function Assistencia() {
     }
   };
 
+  const handleSendWhatsApp = async (ticket: Ticket) => {
+    setSendingTicketId(ticket.id);
+    try {
+      const result = await sendAssistenciaWhatsApp({
+        ticketId: ticket.id,
+        phone: ticket.contato,
+        targetName: ticket.cliente,
+        status: statusLabel[ticket.status],
+        description: ticket.descricao,
+      });
+
+      toast({
+        title: "Mensagem enviada no WhatsApp",
+        description: result.simulated
+          ? "Integração em modo simulado. Clique para abrir no WhatsApp."
+          : "Cliente notificado com sucesso.",
+      });
+
+      if (result.simulated && result.fallbackUrl) {
+        window.open(result.fallbackUrl, "_blank", "noopener,noreferrer");
+      }
+    } catch (err: any) {
+      toast({
+        title: "Falha no envio via WhatsApp",
+        description: err?.message || "Verifique o contato e tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingTicketId(null);
+    }
+  };
+
   return (
     <MainLayout>
       <div className="space-y-6 animate-fade-in">
@@ -119,7 +153,17 @@ export default function Assistencia() {
                 <p><strong className="text-foreground">Responsável:</strong> {t.responsavel || "—"}</p>
                 <p className="text-foreground">{t.descricao}</p>
                 <div className="flex justify-between text-xs text-foreground">
-                  <button className="text-primary" onClick={() => { setEditing(t); setFormOpen(true); }}>Editar</button>
+                  <div className="flex items-center gap-3">
+                    <button className="text-primary" onClick={() => { setEditing(t); setFormOpen(true); }}>Editar</button>
+                    <button
+                      className="text-primary inline-flex items-center gap-1"
+                      onClick={() => handleSendWhatsApp(t)}
+                      disabled={sendingTicketId === t.id}
+                    >
+                      <MessageCircle className="w-3 h-3" />
+                      {sendingTicketId === t.id ? "Enviando..." : "WhatsApp"}
+                    </button>
+                  </div>
                   <button className="text-destructive" onClick={() => removeTicket(t.id)}>Excluir</button>
                 </div>
               </CardContent>

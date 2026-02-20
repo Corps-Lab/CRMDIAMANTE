@@ -4,7 +4,7 @@ import { TransactionForm } from "@/components/financeiro/TransactionForm";
 import { MonthlyGrid } from "@/components/financeiro/MonthlyGrid";
 import { useTransactions } from "@/contexts/TransactionContext";
 import { useClients } from "@/contexts/ClientContext";
-import { TransactionFormData } from "@/types/transaction";
+import { Transaction, TransactionFormData } from "@/types/transaction";
 import { Button } from "@/components/ui/button";
 import { useLocation } from "react-router-dom";
 import {
@@ -26,15 +26,19 @@ import {
 } from "recharts";
 import { Plus, TrendingUp, TrendingDown, DollarSign, Calendar, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { normalizePhoneForWhatsApp, sendCobrancaWhatsApp } from "@/lib/whatsapp";
 
 export default function Financeiro() {
-  const { transactions, addTransaction, removeTransaction, getMonthlyTotals, totalEntradas, totalDespesas } = useTransactions();
-  const { totalFaturamento } = useClients();
+  const { transactions, addTransaction, removeTransaction } = useTransactions();
+  const { totalFaturamento, clients } = useClients();
   const location = useLocation();
+  const { toast } = useToast();
   const [entradaModal, setEntradaModal] = useState<{ open: boolean; mes?: number }>({ open: false });
   const [despesaModal, setDespesaModal] = useState<{ open: boolean; mes?: number }>({ open: false });
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [tab, setTab] = useState<"entradas" | "despesas" | "visao">("entradas");
+  const [sendingChargeId, setSendingChargeId] = useState<string | null>(null);
 
   // Ajusta aba inicial conforme rota acessada (/entradas ou /despesas)
   useEffect(() => {
@@ -82,6 +86,65 @@ export default function Financeiro() {
 
   const handleSubmit = async (data: TransactionFormData) => {
     await addTransaction(data);
+  };
+
+  const toDueDate = (transaction: Transaction) => {
+    if (!transaction.vencimento) return null;
+    const day = String(transaction.vencimento).padStart(2, "0");
+    const month = String(transaction.mes).padStart(2, "0");
+    return `${day}/${month}/${transaction.ano}`;
+  };
+
+  const handleSendCharge = async (transaction: Transaction) => {
+    if (transaction.tipo !== "entrada") return;
+    setSendingChargeId(transaction.id);
+    try {
+      const relatedClient = transaction.clientId
+        ? clients.find((client) => client.id === transaction.clientId)
+        : null;
+      const candidatePhone = relatedClient?.contatoInterno || "";
+      const hasValidPhone = Boolean(normalizePhoneForWhatsApp(candidatePhone));
+      const manualPhone = !hasValidPhone
+        ? window.prompt("Informe o WhatsApp do cliente com DDD:", "")
+        : null;
+      const phone = hasValidPhone ? candidatePhone : manualPhone || "";
+      const normalized = normalizePhoneForWhatsApp(phone);
+      if (!normalized) {
+        throw new Error("Telefone do cliente invalido. Ajuste o cadastro e tente novamente.");
+      }
+
+      const result = await sendCobrancaWhatsApp({
+        transactionId: transaction.id,
+        phone: normalized,
+        targetName:
+          relatedClient?.razaoSocial ||
+          transaction.referenciaNome ||
+          transaction.clientName ||
+          null,
+        amount: transaction.valor,
+        dueDate: toDueDate(transaction),
+        description: transaction.descricao,
+      });
+
+      toast({
+        title: "Cobrança enviada no WhatsApp",
+        description: result.simulated
+          ? "Envio em modo simulado. Abrindo link para confirmação manual."
+          : "Mensagem enviada com sucesso para o cliente.",
+      });
+
+      if (result.simulated && result.fallbackUrl) {
+        window.open(result.fallbackUrl, "_blank", "noopener,noreferrer");
+      }
+    } catch (err: any) {
+      toast({
+        title: "Falha ao enviar cobrança",
+        description: err?.message || "Verifique os dados do cliente e tente novamente.",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingChargeId(null);
+    }
   };
 
   const formatCurrency = (value: number) => {
@@ -296,6 +359,8 @@ export default function Financeiro() {
           ano={selectedYear}
           onAddTransaction={handleAddTransaction}
           onRemoveTransaction={removeTransaction}
+          onSendCharge={handleSendCharge}
+          sendingChargeId={sendingChargeId}
         />
       </div>
     );

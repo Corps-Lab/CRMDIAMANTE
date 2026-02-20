@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, FileSignature, ShieldCheck, DollarSign } from "lucide-react";
+import { Plus, FileSignature, ShieldCheck, DollarSign, MessageCircle, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAgency } from "@/contexts/AgencyContext";
@@ -74,6 +74,19 @@ export default function FunilVendas() {
   }, [filtered]);
 
   const canManageCommission = role === "ceo" || role === "financeiro";
+  const canManageWhatsAppLead = role === "ceo" || role === "financeiro" || role === "vendas";
+  const whatsappWebhookUrl = useMemo(() => {
+    try {
+      const supabaseUrl = String(import.meta.env.VITE_SUPABASE_URL || "").trim();
+      if (!supabaseUrl) return "";
+      const host = new URL(supabaseUrl).hostname;
+      const projectRef = host.split(".")[0];
+      if (!projectRef) return "";
+      return `https://${projectRef}.functions.supabase.co/whatsapp-gateway`;
+    } catch {
+      return "";
+    }
+  }, []);
   const parsedSaleValue = Number(String(saleValue || "0").replace(",", "."));
   const commissionPreview =
     Number.isFinite(parsedSaleValue) && parsedSaleValue > 0
@@ -337,6 +350,41 @@ export default function FunilVendas() {
             </Button>
           </div>
         </div>
+
+        {canManageWhatsAppLead && (
+          <Card className="border-border bg-card/90">
+            <CardContent className="pt-6 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div className="space-y-1">
+                <p className="text-sm font-semibold text-foreground inline-flex items-center gap-2">
+                  <MessageCircle className="w-4 h-4 text-primary" />
+                  Leads de anúncio via WhatsApp
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Configure este webhook no Meta para cadastrar leads automaticamente no funil.
+                </p>
+                <p className="text-xs font-mono break-all text-primary/90">
+                  {whatsappWebhookUrl || "Defina VITE_SUPABASE_URL para gerar o endpoint."}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                className="gap-2"
+                onClick={async () => {
+                  if (!whatsappWebhookUrl) return;
+                  await navigator.clipboard.writeText(whatsappWebhookUrl);
+                  toast({
+                    title: "Webhook copiado",
+                    description: "URL pronta para configurar no Meta WhatsApp Cloud.",
+                  });
+                }}
+              >
+                <Copy className="w-4 h-4" />
+                Copiar webhook
+              </Button>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {byStage.map((col) => (
