@@ -187,7 +187,7 @@ export default function Financeiro() {
                 ))}
               </SelectContent>
             </Select>
-            <TabsList>
+            <TabsList className="w-full sm:w-auto overflow-x-auto whitespace-nowrap justify-start">
               <TabsTrigger value="entradas">Entradas</TabsTrigger>
               <TabsTrigger value="despesas">Despesas</TabsTrigger>
               <TabsTrigger value="visao">Visão Geral</TabsTrigger>

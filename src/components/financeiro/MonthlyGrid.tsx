@@ -46,7 +46,7 @@ export function MonthlyGrid({
   return (
     <div className="space-y-4">
       {/* Grid Header */}
-      <div className="grid grid-cols-12 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 2xl:grid-cols-12 gap-2">
         {meses.map((m) => {
           const data = getMonthData(m.value);
           const isExpanded = expandedMonth === m.value;
@@ -56,7 +56,8 @@ export function MonthlyGrid({
               key={m.value}
               className={cn(
                 "rounded-lg border border-border bg-card p-3 cursor-pointer transition-all hover:border-primary/50",
-                isExpanded && "col-span-12 md:col-span-6 lg:col-span-4"
+                isExpanded &&
+                  "col-span-2 sm:col-span-3 lg:col-span-4 xl:col-span-3 2xl:col-span-4"
               )}
               onClick={() => setExpandedMonth(isExpanded ? null : m.value)}
             >

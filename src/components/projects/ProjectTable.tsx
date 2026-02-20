@@ -33,7 +33,7 @@ export function ProjectTable({ projects, onEdit, onDelete, onView }: ProjectTabl
 
   return (
     <div className="rounded-xl border border-border overflow-hidden">
-      <Table>
+      <Table className="min-w-[980px]">
         <TableHeader>
           <TableRow className="bg-secondary/50 hover:bg-secondary/50">
             <TableHead>Obra</TableHead>

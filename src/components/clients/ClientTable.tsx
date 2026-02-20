@@ -67,7 +67,7 @@ export function ClientTable({ clients, onEdit, onDelete, onView }: ClientTablePr
   return (
     <>
       <div className="rounded-xl border border-border overflow-hidden">
-        <Table>
+        <Table className="min-w-[920px]">
           <TableHeader>
             <TableRow className="bg-secondary/50 hover:bg-secondary/50">
               <TableHead className="text-muted-foreground font-semibold">Razão Social</TableHead>

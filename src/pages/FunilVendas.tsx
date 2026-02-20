@@ -338,12 +338,12 @@ export default function FunilVendas() {
               <p className="text-sm text-muted-foreground">{loading ? "Carregando..." : `${leads.length} lead(s)`}</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Input
               placeholder="Buscar por cliente, contato ou unidade..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="max-w-xs bg-card border-border"
+              className="w-full sm:max-w-xs bg-card border-border"
             />
             <Button onClick={() => setFormOpen(true)} className="gap-2">
               <Plus className="w-4 h-4" /> Novo Lead

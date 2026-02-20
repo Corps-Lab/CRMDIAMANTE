@@ -27,7 +27,7 @@ export function UnitTable({ units, projects, onEdit, onDelete }: UnitTableProps)
 
   return (
     <div className="rounded-xl border border-border overflow-hidden">
-      <Table>
+      <Table className="min-w-[860px]">
         <TableHeader>
           <TableRow className="bg-secondary/50 hover:bg-secondary/50">
             <TableHead>Unidade</TableHead>

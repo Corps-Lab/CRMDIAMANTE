@@ -28,7 +28,7 @@ const severityToClasses = (sev: "info" | "warn" | "danger") => ({
 
 export function Header({ totalCaixa, onMenuClick }: HeaderProps) {
   const { profile, role, signOut, user } = useAuth();
-  const { notifications, clearNotifications, enabled } = useNotifications();
+  const { notifications, clearNotifications } = useNotifications();
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("pt-BR", {
@@ -47,25 +47,25 @@ export function Header({ totalCaixa, onMenuClick }: HeaderProps) {
   };
 
   return (
-    <header className="flex items-center justify-between px-6 py-4 bg-card border-b border-border">
-      <div className="flex items-center gap-6">
+    <header className="flex items-center justify-between gap-2 px-3 py-3 sm:px-6 sm:py-4 bg-card border-b border-border">
+      <div className="flex items-center gap-2 sm:gap-6 min-w-0">
         <Button variant="ghost" size="icon" className="lg:hidden" onClick={onMenuClick}>
           <Menu className="w-5 h-5" />
         </Button>
         
-        <div>
-          <p className="text-sm text-muted-foreground">Caixa Total da Empresa</p>
-          <p className="text-2xl font-bold text-primary">{formatCurrency(totalCaixa)}</p>
+        <div className="min-w-0">
+          <p className="text-[11px] sm:text-sm text-muted-foreground">Caixa Total</p>
+          <p className="text-base sm:text-2xl font-bold text-primary truncate">{formatCurrency(totalCaixa)}</p>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-1 sm:gap-3 shrink-0">
         {/* Period Selector */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="outline"
-              className="gap-2 px-3 py-2 h-10 text-sm lg:px-4 lg:h-10"
+              className="hidden sm:inline-flex gap-2 px-3 py-2 h-10 text-sm lg:px-4 lg:h-10"
             >
               <Calendar className="w-4 h-4" />
               <span className="hidden sm:inline">Selecionar Período</span>
@@ -84,14 +84,14 @@ export function Header({ totalCaixa, onMenuClick }: HeaderProps) {
         {/* Notifications */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="relative">
+            <Button variant="ghost" size="icon" className="relative h-9 w-9 sm:h-10 sm:w-10">
               <BellDot className="w-5 h-5" />
               <span className="absolute -top-1 -right-1 min-w-[20px] px-1 h-5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center">
                 {notifications.length}
               </span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-72 max-h-96 overflow-y-auto">
+          <DropdownMenuContent align="end" className="w-[calc(100vw-1.5rem)] max-w-72 max-h-96 overflow-y-auto">
             {notifications.length > 0 && (
               <DropdownMenuItem
                 className="text-xs justify-between text-muted-foreground"
@@ -124,20 +124,20 @@ export function Header({ totalCaixa, onMenuClick }: HeaderProps) {
         {user && (
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <button className="flex items-center gap-3 hover:opacity-80 transition-opacity">
-                <Avatar className="w-10 h-10">
+              <button className="flex items-center gap-2 sm:gap-3 hover:opacity-80 transition-opacity">
+                <Avatar className="w-9 h-9 sm:w-10 sm:h-10">
                   <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.nome} />
                   <AvatarFallback className="bg-primary text-primary-foreground font-bold">
                     {profile?.nome ? getInitials(profile.nome) : "U"}
                   </AvatarFallback>
                 </Avatar>
-                <div className="hidden md:block text-left">
+                <div className="hidden lg:block text-left">
                   <p className="text-sm font-medium text-foreground">{profile?.nome || "Usuário"}</p>
                   <Badge variant="default" className="text-xs">
                     {getRoleLabel(role)}
                   </Badge>
                 </div>
-                <ChevronDown className="w-4 h-4 text-muted-foreground hidden md:block" />
+                <ChevronDown className="w-4 h-4 text-muted-foreground hidden lg:block" />
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">

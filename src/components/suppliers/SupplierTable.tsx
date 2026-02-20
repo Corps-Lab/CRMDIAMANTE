@@ -53,7 +53,7 @@ export function SupplierTable({ suppliers, onEdit, onDelete, onView }: SupplierT
   return (
     <>
       <div className="rounded-xl border border-border overflow-hidden">
-        <Table>
+        <Table className="min-w-[820px]">
           <TableHeader>
             <TableRow className="bg-secondary/50 hover:bg-secondary/50">
               <TableHead className="text-muted-foreground font-semibold">Nome/Razão Social</TableHead>

@@ -69,7 +69,7 @@ export default function Obras() {
               <p className="text-sm text-muted-foreground">{loading ? "Carregando..." : `${projects.length} obra(s)`}</p>
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
             <Button onClick={() => setProjectFormOpen(true)} className="gap-2">
               <Plus className="w-4 h-4" /> Nova Obra
             </Button>
