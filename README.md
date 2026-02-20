@@ -39,7 +39,7 @@ npm run dev -- --host 0.0.0.0 --port 3000
 Aplicar migrations no projeto remoto:
 
 ```bash
-supabase db push --project-ref wsaisktlywyadtkcqiaj
+supabase db push --project-ref vrijkozdsituzznxhttx
 ```
 
 > Se necessario, rode `supabase login` antes.
@@ -51,14 +51,14 @@ Edge Function adicionada: `notion-sync`.
 Deploy da function:
 
 ```bash
-supabase functions deploy notion-sync --project-ref wsaisktlywyadtkcqiaj
+supabase functions deploy notion-sync --project-ref vrijkozdsituzznxhttx
 ```
 
 Defina os secrets:
 
 ```bash
-supabase secrets set NOTION_TOKEN=seu_token_notion --project-ref wsaisktlywyadtkcqiaj
-supabase secrets set NOTION_DATABASE_CLIENTES_ID=seu_database_id --project-ref wsaisktlywyadtkcqiaj
+supabase secrets set NOTION_TOKEN=seu_token_notion --project-ref vrijkozdsituzznxhttx
+supabase secrets set NOTION_DATABASE_CLIENTES_ID=seu_database_id --project-ref vrijkozdsituzznxhttx
 ```
 
 No CRM, abra `Importar CSV` e use a secao **Sincronizar clientes via Notion** para:

@@ -16,9 +16,12 @@ create table if not exists public.projects (
 );
 
 alter table public.projects enable row level security;
-create policy if not exists "Projects read" on public.projects for select using (auth.uid() is not null);
-create policy if not exists "Projects manage" on public.projects for all using (public.is_manager(auth.uid()));
-create trigger if not exists update_projects_updated_at before update on public.projects
+drop policy if exists "Projects read" on public.projects;
+create policy "Projects read" on public.projects for select using (auth.uid() is not null);
+drop policy if exists "Projects manage" on public.projects;
+create policy "Projects manage" on public.projects for all using (public.is_manager(auth.uid()));
+drop trigger if exists update_projects_updated_at on public.projects;
+create trigger update_projects_updated_at before update on public.projects
   for each row execute function public.update_updated_at_column();
 
 -- Units linked to projects
@@ -34,9 +37,12 @@ create table if not exists public.units (
 );
 create index if not exists idx_units_project on public.units(project_id);
 alter table public.units enable row level security;
-create policy if not exists "Units read" on public.units for select using (auth.uid() is not null);
-create policy if not exists "Units manage" on public.units for all using (public.is_manager(auth.uid()));
-create trigger if not exists update_units_updated_at before update on public.units
+drop policy if exists "Units read" on public.units;
+create policy "Units read" on public.units for select using (auth.uid() is not null);
+drop policy if exists "Units manage" on public.units;
+create policy "Units manage" on public.units for all using (public.is_manager(auth.uid()));
+drop trigger if exists update_units_updated_at on public.units;
+create trigger update_units_updated_at before update on public.units
   for each row execute function public.update_updated_at_column();
 
 -- Leads (pipeline de vendas)
@@ -53,8 +59,10 @@ create table if not exists public.leads (
   created_at timestamptz not null default now()
 );
 alter table public.leads enable row level security;
-create policy if not exists "Leads read" on public.leads for select using (auth.uid() is not null);
-create policy if not exists "Leads manage" on public.leads for all using (public.is_manager(auth.uid()));
+drop policy if exists "Leads read" on public.leads;
+create policy "Leads read" on public.leads for select using (auth.uid() is not null);
+drop policy if exists "Leads manage" on public.leads;
+create policy "Leads manage" on public.leads for all using (public.is_manager(auth.uid()));
 
 -- RFIs
 create table if not exists public.rfis (
@@ -72,9 +80,12 @@ create table if not exists public.rfis (
 );
 create index if not exists idx_rfis_project on public.rfis(project_id);
 alter table public.rfis enable row level security;
-create policy if not exists "RFIs read" on public.rfis for select using (auth.uid() is not null);
-create policy if not exists "RFIs manage" on public.rfis for all using (public.is_manager(auth.uid()));
-create trigger if not exists update_rfis_updated_at before update on public.rfis
+drop policy if exists "RFIs read" on public.rfis;
+create policy "RFIs read" on public.rfis for select using (auth.uid() is not null);
+drop policy if exists "RFIs manage" on public.rfis;
+create policy "RFIs manage" on public.rfis for all using (public.is_manager(auth.uid()));
+drop trigger if exists update_rfis_updated_at on public.rfis;
+create trigger update_rfis_updated_at before update on public.rfis
   for each row execute function public.update_updated_at_column();
 
 -- RDOs
@@ -94,9 +105,12 @@ create table if not exists public.rdos (
 );
 create index if not exists idx_rdos_project on public.rdos(project_id);
 alter table public.rdos enable row level security;
-create policy if not exists "RDO read" on public.rdos for select using (auth.uid() is not null);
-create policy if not exists "RDO manage" on public.rdos for all using (public.is_manager(auth.uid()));
-create trigger if not exists update_rdos_updated_at before update on public.rdos
+drop policy if exists "RDO read" on public.rdos;
+create policy "RDO read" on public.rdos for select using (auth.uid() is not null);
+drop policy if exists "RDO manage" on public.rdos;
+create policy "RDO manage" on public.rdos for all using (public.is_manager(auth.uid()));
+drop trigger if exists update_rdos_updated_at on public.rdos;
+create trigger update_rdos_updated_at before update on public.rdos
   for each row execute function public.update_updated_at_column();
 
 -- Storage bucket for RDO photos
@@ -105,11 +119,15 @@ values ('rdo-fotos', 'rdo-fotos', true)
 on conflict (id) do nothing;
 
 -- Policies for rdo-fotos bucket
-create policy if not exists "Public read rdo-fotos" on storage.objects for select
+drop policy if exists "Public read rdo-fotos" on storage.objects;
+create policy "Public read rdo-fotos" on storage.objects for select
   using (bucket_id = 'rdo-fotos');
-create policy if not exists "Auth upload rdo-fotos" on storage.objects for insert
+drop policy if exists "Auth upload rdo-fotos" on storage.objects;
+create policy "Auth upload rdo-fotos" on storage.objects for insert
   with check (bucket_id = 'rdo-fotos' and auth.role() = 'authenticated');
-create policy if not exists "Auth update rdo-fotos" on storage.objects for update
+drop policy if exists "Auth update rdo-fotos" on storage.objects;
+create policy "Auth update rdo-fotos" on storage.objects for update
   using (bucket_id = 'rdo-fotos' and auth.role() = 'authenticated');
-create policy if not exists "Auth delete rdo-fotos" on storage.objects for delete
+drop policy if exists "Auth delete rdo-fotos" on storage.objects;
+create policy "Auth delete rdo-fotos" on storage.objects for delete
   using (bucket_id = 'rdo-fotos' and auth.role() = 'authenticated');
