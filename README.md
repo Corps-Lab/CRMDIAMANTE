@@ -1,128 +1,153 @@
-# CRM DIAMANTE
+# CRM Principal + Portal do Cliente (Monorepo)
 
-Aplicacao React + Supabase com dois modos de execucao:
+Projeto com CRM como app principal e Portal do Cliente como app interno vinculado.
 
-- `mock`: funciona local sem depender de banco.
-- `online`: usa Supabase (auth + banco) e integra Notion via Edge Function.
+- CRM principal: `apps/agent-crm`
+- Portal do cliente: `apps/portal-web`
+- Shared: `packages/shared`
+- Backend: `supabase` (migrations, seed, edge functions)
 
-## 1) Rodar local em modo mock
+## Stack
 
-```bash
-npm install
-cp .env.example .env
-# manter:
-# VITE_APP_RUNTIME=mock
-# VITE_USE_MOCK_AUTH=true
-npm run dev -- --host 0.0.0.0 --port 3000
-```
+- Frontend: React + Vite + TypeScript
+- Backend: Supabase (Postgres + Auth + Storage + Realtime)
+- Serverless: Supabase Edge Functions (Deno + TypeScript)
 
-## 2) Rodar local em modo online (Supabase)
-
-No `.env`:
-
-```bash
-VITE_APP_RUNTIME=online
-VITE_USE_MOCK_AUTH=false
-VITE_BASE_PATH=/
-VITE_SUPABASE_URL=https://SEU-PROJETO.supabase.co
-VITE_SUPABASE_ANON_KEY=SEU_ANON_KEY
-```
-
-Depois:
-
-```bash
-npm run dev -- --host 0.0.0.0 --port 3000
-```
-
-## 3) Banco de dados (Supabase)
-
-Aplicar migrations no projeto remoto:
-
-```bash
-supabase db push --project-ref vrijkozdsituzznxhttx
-```
-
-> Se necessario, rode `supabase login` antes.
-
-## 4) Integracao Notion (online)
-
-Edge Function adicionada: `notion-sync`.
-
-Deploy da function:
-
-```bash
-supabase functions deploy notion-sync --project-ref vrijkozdsituzznxhttx
-```
-
-Defina os secrets:
-
-```bash
-supabase secrets set NOTION_TOKEN=seu_token_notion --project-ref vrijkozdsituzznxhttx
-supabase secrets set NOTION_DATABASE_CLIENTES_ID=seu_database_id --project-ref vrijkozdsituzznxhttx
-```
-
-No CRM, abra `Importar CSV` e use a secao **Sincronizar clientes via Notion** para:
-
-1. Testar conexao;
-2. Carregar previa;
-3. Importar para clientes.
-
-## 5) Integracao WhatsApp (assistencia, cobranca e leads de anuncio)
-
-Edge Function adicionada: `whatsapp-gateway`.
-
-Deploy da function:
-
-```bash
-supabase functions deploy whatsapp-gateway --project-ref vrijkozdsituzznxhttx
-```
-
-Secrets para envio real pelo Meta WhatsApp Cloud API:
-
-```bash
-supabase secrets set WHATSAPP_TOKEN=seu_token_meta --project-ref vrijkozdsituzznxhttx
-supabase secrets set WHATSAPP_PHONE_NUMBER_ID=seu_phone_number_id --project-ref vrijkozdsituzznxhttx
-supabase secrets set WHATSAPP_VERIFY_TOKEN=seu_verify_token_webhook --project-ref vrijkozdsituzznxhttx
-supabase secrets set WHATSAPP_DEFAULT_COUNTRY=55 --project-ref vrijkozdsituzznxhttx
-```
-
-Webhook para configurar no Meta:
+## Estrutura
 
 ```txt
-https://vrijkozdsituzznxhttx.functions.supabase.co/whatsapp-gateway
+apps/
+  agent-crm/
+  portal-web/
+packages/
+  shared/
+supabase/
+  migrations/
+  seed.sql
+  functions/
 ```
 
-No CRM:
-- Assistencia Tecnica: botao `WhatsApp` em cada chamado.
-- Financeiro: botao de cobranca por WhatsApp nas entradas mensais.
-- Funil de Vendas: card com endpoint para leads de anuncio via WhatsApp.
+## Scripts principais
 
-## 6) Hospedagem
+- `pnpm i`
+- `pnpm dev` (CRM principal em `http://localhost:5173`)
+- `pnpm dev:portal` (Portal em `http://localhost:5174`)
+- `pnpm dev:all` (CRM + Portal juntos)
+- `pnpm supabase:start`
+- `pnpm db:reset`
+- `pnpm supabase:functions:serve`
 
-### Vercel
+## Setup local completo
 
-1. Conecte o repositorio.
-2. Build command: `npm run build`
-3. Output directory: `dist`
-4. Configure env vars de producao:
-   - `VITE_APP_RUNTIME=online`
-   - `VITE_USE_MOCK_AUTH=false`
-   - `VITE_BASE_PATH=/`
-   - `VITE_SUPABASE_URL=...`
-   - `VITE_SUPABASE_ANON_KEY=...`
+1. Instalar dependências:
 
-O arquivo `vercel.json` ja inclui rewrite SPA.
+```bash
+pnpm i
+```
 
-### Netlify
+2. Subir Supabase local:
 
-`netlify.toml` ja inclui:
-- build command `npm run build`
-- publish `dist`
-- redirect SPA para `index.html`
+```bash
+pnpm supabase:start
+```
 
-## 7) Simulador CAIXA oficial
+3. Resetar DB + seed:
 
-O frontend usa `VITE_CAIXA_PROXY_BASE` (padrao `/api/caixa`) para consultar o simulador oficial.
+```bash
+pnpm db:reset
+```
 
-- Local dev: proxy nativo do Vite (ja incluso).
-- Deploy: aponte `VITE_CAIXA_PROXY_BASE` para um endpoint backend/proxy valido.
+4. Configurar env do CRM:
+
+```bash
+cp apps/agent-crm/.env.example apps/agent-crm/.env
+```
+
+5. Configurar env do Portal:
+
+```bash
+cp apps/portal-web/.env.example apps/portal-web/.env
+```
+
+6. Preencher variáveis (`supabase status` mostra a ANON KEY):
+
+`apps/agent-crm/.env`
+
+```bash
+VITE_SUPABASE_URL=http://127.0.0.1:54321
+VITE_SUPABASE_ANON_KEY=<ANON_KEY_LOCAL>
+VITE_PORTAL_URL=http://localhost:5174/#
+```
+
+`apps/portal-web/.env`
+
+```bash
+VITE_SUPABASE_URL=http://127.0.0.1:54321
+VITE_SUPABASE_ANON_KEY=<ANON_KEY_LOCAL>
+VITE_EDGE_FUNCTIONS_BASE_URL=
+```
+
+7. Rodar Edge Functions localmente:
+
+```bash
+pnpm supabase:functions:serve
+```
+
+8. Rodar CRM principal e Portal:
+
+```bash
+pnpm dev:all
+```
+
+## Link do Portal enviado pelo CRM
+
+No CRM (`apps/agent-crm`) existe bloco **Portal do Cliente** com:
+
+- link gerado automaticamente para o cliente;
+- botão **Copiar link**;
+- botão **Copiar mensagem pronta**;
+- botão **Ir para autenticacao do portal**.
+
+O cliente ainda autentica com CPF + últimos 6 dígitos do telefone (regra de segurança mantida).
+
+## URLs online (GitHub Pages)
+
+- CRM principal: `https://corps-lab.github.io/CRMDIAMANTE/`
+- Portal do cliente (auth): `https://corps-lab.github.io/CRMDIAMANTE/portal/#/login`
+
+## Acesso automatico ao cliente ativo
+
+A Edge Function `sync-client-from-crm` agora provisiona acesso automaticamente quando o cliente chega como ativo:
+
+- cria usuario Auth com email sintetico `cpf@portal.local` (se nao existir);
+- sincroniza senha com `phone_last6`;
+- salva `profiles.portal_access_enabled = true`.
+
+Campos aceitos para status de ativacao no payload de `profiles`:
+
+- `portal_access_enabled` (boolean),
+- `is_active` / `active` (boolean),
+- ou `status` com valores como `ativo` / `active`.
+
+Se vier como inativo, o perfil fica com `portal_access_enabled = false` e o login no portal retorna bloqueio.
+
+## Credenciais seed (demo)
+
+### Clientes (Portal: CPF + pass6)
+
+- Cliente A: `52998224725` / `456789`
+- Cliente B: `11144477735` / `112233`
+
+### Agentes (CRM)
+
+- `agent.ceo@crm.local` / `Agent@123`
+- `agent.finance@crm.local` / `Agent@123`
+
+## Segurança (RLS)
+
+- RLS habilitado nas tabelas de domínio (FAQ leitura pública).
+- Funções helper: `is_agent(uid)` e `owns_contract(contract_number, uid)`.
+- Cliente só acessa dados dos contratos que possui.
+- Galeria só aparece se `publication_at <= now()`.
+- Mensagens internas (`message_type='note'`) não aparecem para cliente.
+- Buckets privados com signed URL via Edge Function `signed-url`.

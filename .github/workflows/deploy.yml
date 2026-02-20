@@ -18,9 +18,6 @@ concurrency:
 env:
   VITE_SUPABASE_URL: https://vrijkozdsituzznxhttx.supabase.co
   VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZyaWprb3pkc2l0dXp6bnhodHR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MDQ2NTIsImV4cCI6MjA4NzE4MDY1Mn0.P2G_3btpVNgGQIKiJehkWcFFg1z9UAYbKg9Jb9c1nRg
-  VITE_APP_RUNTIME: online
-  VITE_USE_MOCK_AUTH: "false"
-  VITE_BASE_PATH: ${{ format('/{0}/', github.event.repository.name) }}
 
 jobs:
   build:
@@ -33,13 +30,39 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: npm
+          cache: pnpm
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.0
 
       - name: Install
-        run: npm ci
+        run: pnpm i --frozen-lockfile
 
-      - name: Build
-        run: npm run build
+      - name: Build shared package
+        run: pnpm --filter @crm/shared build
+
+      - name: Build CRM app
+        env:
+          VITE_BASE_PATH: ${{ format('/{0}/', github.event.repository.name) }}
+          VITE_PORTAL_URL: ${{ format('https://{0}.github.io/{1}/portal/#', github.repository_owner, github.event.repository.name) }}
+        run: pnpm --filter @crm/agent-crm build
+
+      - name: Build Portal app
+        env:
+          VITE_BASE_PATH: ${{ format('/{0}/portal/', github.event.repository.name) }}
+        run: pnpm --filter @crm/portal-web build
+
+      - name: Assemble Pages artifact
+        run: |
+          rm -rf dist
+          mkdir -p dist/portal
+          cp -R apps/agent-crm/dist/. dist/
+          cp -R apps/portal-web/dist/. dist/portal/
+          cp dist/index.html dist/404.html
+          cp dist/portal/index.html dist/portal/404.html
+          touch dist/.nojekyll
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
