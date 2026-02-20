@@ -154,6 +154,7 @@ function messageError(error: unknown) {
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const logoUrl = `${import.meta.env.BASE_URL}logo-diamante.png`;
 
   const [menu, setMenu] = useState<MenuItem>("Pagina Inicial");
   const [loadingSession, setLoadingSession] = useState(true);
@@ -1480,6 +1481,8 @@ export default function App() {
     return (
       <div className="auth-wrap">
         <form className="auth-card" onSubmit={handleLogin}>
+          <img className="brand-logo" src={logoUrl} alt="CRM DIAMANTE" />
+          <p className="brand-name">CRM DIAMANTE</p>
           <h2>Portal do Cliente</h2>
           <p>Entre com CPF e os ultimos 6 digitos do telefone cadastrado.</p>
           <label>CPF</label>
@@ -1513,6 +1516,8 @@ export default function App() {
     return (
       <div className="auth-wrap">
         <div className="auth-card">
+          <img className="brand-logo" src={logoUrl} alt="CRM DIAMANTE" />
+          <p className="brand-name">CRM DIAMANTE</p>
           <h2>Selecione seu contrato</h2>
           <p>Escolha o contrato para acessar o portal.</p>
           {contracts.map((contract) => (
@@ -1531,7 +1536,13 @@ export default function App() {
   return (
     <div className="layout">
       <aside className="sidebar">
-        <h2>Portal</h2>
+        <div className="sidebar-brand">
+          <img className="brand-logo" src={logoUrl} alt="CRM DIAMANTE" />
+          <div>
+            <h2>Portal do Cliente</h2>
+            <small>CRM DIAMANTE</small>
+          </div>
+        </div>
         {PORTAL_MENU.map((item) => (
           <button
             key={item}

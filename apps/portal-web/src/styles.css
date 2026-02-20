@@ -1,15 +1,35 @@
 :root {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-  color: #111827;
-  background: #f4f6f8;
+  color: #ffffff;
+  background: #13213c;
+  --brand-bg: #13213c;
+  --brand-bg-soft: #10203a;
+  --brand-bg-strong: #0e1a2f;
+  --brand-border: #27456d;
+  --brand-muted: #b8c7de;
+  --brand-text: #ffffff;
+  --brand-orange: #f9a40b;
+  --brand-orange-strong: #ffb020;
+  --brand-shadow: 0 16px 32px rgba(0, 0, 0, 0.3);
 }
 
 * {
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
 body {
   margin: 0;
+  color: var(--brand-text);
+  background:
+    radial-gradient(circle at top right, rgba(249, 164, 11, 0.15), transparent 36%),
+    radial-gradient(circle at bottom left, rgba(39, 69, 109, 0.45), transparent 40%),
+    var(--brand-bg);
 }
 
 button,
@@ -21,35 +41,74 @@ textarea {
 
 .layout {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 260px 1fr;
   min-height: 100vh;
 }
 
 .sidebar {
-  border-right: 1px solid #d1d5db;
+  border-right: 1px solid var(--brand-border);
   padding: 16px;
-  background: #fff;
+  background: linear-gradient(180deg, var(--brand-bg-strong), var(--brand-bg));
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--brand-border);
 }
 
 .sidebar h2 {
-  margin: 0 0 12px;
-  font-size: 18px;
+  margin: 0;
+  font-size: 17px;
+  color: var(--brand-orange);
+}
+
+.sidebar small {
+  color: var(--brand-muted);
+}
+
+.brand-logo {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 8px rgba(249, 164, 11, 0.35));
+}
+
+.brand-name {
+  margin: 4px 0 14px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--brand-muted);
+  text-align: center;
 }
 
 .menu-btn {
   width: 100%;
   text-align: left;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 10px;
+  border: 1px solid var(--brand-border);
+  border-radius: 10px;
+  padding: 10px 12px;
   margin-bottom: 8px;
-  background: #fff;
+  color: var(--brand-text);
+  background: rgba(16, 32, 58, 0.8);
   cursor: pointer;
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.menu-btn:hover {
+  border-color: var(--brand-orange);
+  background: rgba(17, 35, 63, 0.95);
 }
 
 .menu-btn.active {
-  border-color: #111827;
-  font-weight: 600;
+  border-color: var(--brand-orange);
+  background: rgba(249, 164, 11, 0.18);
+  color: #fff3de;
+  font-weight: 700;
 }
 
 .content {
@@ -62,18 +121,25 @@ textarea {
   align-items: center;
   gap: 12px;
   margin-bottom: 16px;
-  background: #fff;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
+  background: var(--brand-bg-soft);
+  border: 1px solid var(--brand-border);
+  border-radius: 12px;
   padding: 12px;
+  box-shadow: var(--brand-shadow);
 }
 
 .card {
-  background: #fff;
-  border: 1px solid #d1d5db;
-  border-radius: 10px;
+  background: var(--brand-bg-soft);
+  border: 1px solid var(--brand-border);
+  border-radius: 12px;
   padding: 12px;
   margin-bottom: 12px;
+  box-shadow: var(--brand-shadow);
+}
+
+.card h3,
+.card h4 {
+  color: var(--brand-orange);
 }
 
 .grid {
@@ -94,58 +160,85 @@ textarea {
 }
 
 textarea {
-  min-height: 80px;
+  min-height: 84px;
 }
 
 input,
 select,
 textarea {
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 8px;
+  border: 1px solid var(--brand-border);
+  border-radius: 10px;
+  padding: 9px;
   width: 100%;
+  color: #ffffff;
+  background: rgba(11, 22, 39, 0.8);
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #9fb2cf;
 }
 
 input[type="checkbox"] {
   width: auto;
 }
 
-button.primary {
-  background: #111827;
-  color: #fff;
-  border: 0;
-  border-radius: 8px;
-  padding: 8px 12px;
+label {
+  color: var(--brand-muted);
+}
+
+button.primary,
+button.secondary {
+  border-radius: 10px;
+  padding: 9px 12px;
   cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+button.primary {
+  background: var(--brand-orange);
+  color: #14213c;
+  border: 1px solid var(--brand-orange);
+  font-weight: 700;
+}
+
+button.primary:hover {
+  transform: translateY(-1px);
+  background: var(--brand-orange-strong);
+  box-shadow: 0 10px 20px rgba(249, 164, 11, 0.3);
 }
 
 button.secondary {
-  background: #fff;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  padding: 8px 12px;
-  cursor: pointer;
+  background: rgba(16, 32, 58, 0.85);
+  color: #ffffff;
+  border: 1px solid var(--brand-border);
+}
+
+button.secondary:hover {
+  transform: translateY(-1px);
+  border-color: var(--brand-orange);
 }
 
 .chat-box {
-  border: 1px solid #d1d5db;
+  border: 1px solid var(--brand-border);
   border-radius: 10px;
   padding: 10px;
   max-height: 320px;
   overflow: auto;
-  background: #f9fafb;
+  background: rgba(11, 22, 39, 0.85);
 }
 
 .msg {
   margin-bottom: 8px;
   padding: 8px;
   border-radius: 8px;
-  border: 1px solid #d1d5db;
-  background: #fff;
+  border: 1px solid #355379;
+  background: rgba(19, 33, 60, 0.95);
 }
 
 .msg.self {
-  background: #e5f3ff;
+  border-color: #c47f00;
+  background: rgba(249, 164, 11, 0.2);
 }
 
 .auth-wrap {
@@ -156,19 +249,30 @@ button.secondary {
 }
 
 .auth-card {
-  width: min(420px, 100%);
-  background: #fff;
-  border: 1px solid #d1d5db;
-  border-radius: 12px;
+  width: min(440px, 100%);
+  background: linear-gradient(180deg, rgba(13, 26, 47, 0.98), rgba(16, 32, 58, 0.98));
+  border: 1px solid var(--brand-border);
+  border-radius: 14px;
   padding: 16px;
+  box-shadow: 0 0 0 1px rgba(249, 164, 11, 0.2), 0 24px 42px rgba(0, 0, 0, 0.45);
+}
+
+.auth-card > h2 {
+  margin-top: 0;
+  color: var(--brand-orange);
 }
 
 @media (max-width: 960px) {
   .layout {
     grid-template-columns: 1fr;
   }
+
   .sidebar {
     border-right: 0;
-    border-bottom: 1px solid #d1d5db;
+    border-bottom: 1px solid var(--brand-border);
+  }
+
+  .sidebar-brand {
+    margin-bottom: 10px;
   }
 }
