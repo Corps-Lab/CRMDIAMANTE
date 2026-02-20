@@ -7,7 +7,12 @@ import { createCaixaOfficialProxyPlugin } from "./scripts/caixaOfficialProxy";
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
-  const basePath = mode === "html" ? "./" : env.VITE_BASE_PATH || "/";
+  const githubRepoName = process.env.GITHUB_REPOSITORY?.split("/")[1];
+  const githubPagesBase = githubRepoName ? `/${githubRepoName}/` : "/";
+  const basePath =
+    mode === "html"
+      ? "./"
+      : env.VITE_BASE_PATH || (process.env.GITHUB_ACTIONS ? githubPagesBase : "/");
 
   return {
     base: mode === "development" ? "/" : basePath,
