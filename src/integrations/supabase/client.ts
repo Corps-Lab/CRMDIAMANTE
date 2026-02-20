@@ -3,9 +3,9 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 // Fallbacks embedded for GitHub Pages build (public anon key is safe to expose)
-const FALLBACK_URL = "https://wsaisktlywyadtkcqiaj.supabase.co";
+const FALLBACK_URL = "https://vrijkozdsituzznxhttx.supabase.co";
 const FALLBACK_ANON =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndzYWlza3RseXd5YWR0a2NxaWFqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA4NjcxODcsImV4cCI6MjA4NjQ0MzE4N30.w-I8ZqXZIOr_103YbsAdL80Yrdbg2rmDHgB9kRpwgqI";
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZyaWprb3pkc2l0dXp6bnhodHR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MDQ2NTIsImV4cCI6MjA4NzE4MDY1Mn0.P2G_3btpVNgGQIKiJehkWcFFg1z9UAYbKg9Jb9c1nRg";
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || FALLBACK_URL;
 const SUPABASE_ANON_KEY =
