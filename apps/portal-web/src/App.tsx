@@ -111,6 +111,36 @@ function formatDateTime(value: string | null | undefined) {
   return new Date(value).toLocaleString("pt-BR");
 }
 
+function readCompatString(row: Record<string, unknown>, keys: string[]) {
+  for (const key of keys) {
+    const value = row[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+}
+
+function normalizeProfileRow(row: unknown): Profile | null {
+  if (!row || typeof row !== "object") return null;
+  const source = row as Record<string, unknown>;
+  const userId = readCompatString(source, ["user_id"]);
+  if (!userId) return null;
+  const phone = readCompatString(source, ["phone_e164", "telefone", "phone"]);
+  const fallbackPass6 = phone.replace(/\D/g, "").slice(-6);
+  return {
+    user_id: userId,
+    cpf: readCompatString(source, ["cpf"]),
+    full_name: readCompatString(source, ["full_name", "nome"]) || "Cliente",
+    phone_e164: phone,
+    phone_last6: readCompatString(source, ["phone_last6"]) || fallbackPass6,
+    client_external_id: readCompatString(source, ["client_external_id", "id"]) || null,
+    portal_access_enabled:
+      typeof source.portal_access_enabled === "boolean" ? source.portal_access_enabled : true,
+    email_contact: readCompatString(source, ["email_contact", "email"]) || null,
+    address_line: readCompatString(source, ["address_line", "endereco"]) || null,
+    created_at: readCompatString(source, ["created_at"]) || new Date().toISOString(),
+  };
+}
+
 function toCsv(filename: string, headers: string[], rows: Array<Array<string | number>>) {
   const csv = [headers, ...rows]
     .map((row) => row.map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(","))
@@ -332,19 +362,29 @@ export default function App() {
       return;
     }
 
-    const [{ data: profileData }, { data: contractsData }, { data: settingsData }] = await Promise.all([
+    const [profileRes, contractsRes, settingsRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", uid).maybeSingle(),
       supabase.from("contracts").select("*").eq("user_id", uid).order("contract_number"),
       supabase.from("user_settings").select("*").eq("user_id", uid).maybeSingle(),
     ]);
 
-    const profileValue = (profileData || null) as Profile | null;
-    const contractsValue = (contractsData || []) as Contract[];
+    const profileValue = normalizeProfileRow(profileRes.data);
+    let contractsValue = (contractsRes.data || []) as Contract[];
+    if (!contractsValue.length) {
+      try {
+        const cachedContracts = JSON.parse(localStorage.getItem("portal_contracts_cache") || "[]");
+        if (Array.isArray(cachedContracts)) {
+          contractsValue = cachedContracts as Contract[];
+        }
+      } catch (_error) {
+        contractsValue = [];
+      }
+    }
     setProfile(profileValue);
     setContracts(contractsValue);
 
-    if (settingsData) {
-      setSettings(settingsData as UserSettings);
+    if (settingsRes.data) {
+      setSettings(settingsRes.data as UserSettings);
     } else if (profileValue) {
       const insertSettings = await supabase
         .from("user_settings")
@@ -618,6 +658,7 @@ export default function App() {
       setLockRemainingSeconds(0);
       setLoginCpf("");
       setLoginPass6("");
+      localStorage.setItem("portal_contracts_cache", JSON.stringify(res.contracts));
       navigate(res.contracts.length > 1 && !selectedContract ? "/selecionar-contrato" : "/", { replace: true });
     } catch (error) {
       const e = error as Error & { status?: number; data?: Record<string, unknown> | null };
@@ -646,6 +687,7 @@ export default function App() {
     setConversation(null);
     setMessages([]);
     localStorage.removeItem("portal_selected_contract");
+    localStorage.removeItem("portal_contracts_cache");
     navigate("/login", { replace: true });
   }
 
