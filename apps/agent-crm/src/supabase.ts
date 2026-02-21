@@ -13,3 +13,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
   },
 });
+
+export const edgeOptions = {
+  supabaseUrl,
+  anonKey: supabaseAnonKey,
+  edgeBaseUrl: (import.meta.env.VITE_EDGE_FUNCTIONS_BASE_URL as string | undefined)?.trim() || undefined,
+};

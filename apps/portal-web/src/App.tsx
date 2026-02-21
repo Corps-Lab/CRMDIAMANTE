@@ -65,6 +65,52 @@ type SearchGrouped = {
   total?: number;
 };
 
+type ChatBackend = "conversation" | "portal_thread";
+type LegacyThreadStatus = "aberto" | "em_atendimento" | "aguardando_cliente" | "resolvido" | "fechado";
+
+type PortalChatAccess = {
+  protocol: string;
+  accessKey: string;
+  threadId: string;
+  contractNumber: string;
+};
+
+type PortalAttachment = {
+  name: string;
+  type: string;
+  size: number;
+  path?: string;
+  url?: string;
+  kind?: "image" | "video" | "audio" | "file";
+};
+
+type PortalChatThread = {
+  id: string;
+  protocol: string;
+  clientName: string;
+  status: LegacyThreadStatus;
+  createdAt: string;
+  updatedAt: string;
+  lastMessageAt: string;
+};
+
+type PortalChatMessage = {
+  id: string;
+  threadId: string;
+  senderType: "cliente" | "suporte" | "sistema";
+  senderName: string | null;
+  message: string;
+  attachments: PortalAttachment[];
+  readBySupport: boolean;
+  readByClient: boolean;
+  createdAt: string;
+};
+
+type MessageView = Message & {
+  legacyAttachments?: PortalAttachment[];
+  sender_name?: string | null;
+};
+
 type LoadState = {
   news: NewsItem[];
   bills: FinancialBill[];
@@ -181,6 +227,68 @@ function messageError(error: unknown) {
   return error instanceof Error ? error.message : "Erro inesperado.";
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object";
+}
+
+function isMissingTableError(error: unknown) {
+  if (!isRecord(error)) return false;
+  const code = typeof error.code === "string" ? error.code : "";
+  return code === "PGRST205";
+}
+
+async function fileToBase64(file: File): Promise<string> {
+  return await new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Falha ao ler arquivo."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function mapPortalMessage(msg: PortalChatMessage): MessageView {
+  const senderType = msg.senderType === "suporte" ? "agent" : msg.senderType === "cliente" ? "client" : "system";
+  return {
+    id: msg.id,
+    conversation_id: msg.threadId,
+    contract_number: "",
+    sender_type: senderType,
+    sender_user_id: null,
+    message_type: msg.attachments.length > 0 ? "attachment" : "text",
+    body_text: msg.message || null,
+    attachment_id: null,
+    created_at: msg.createdAt,
+    read_at_client: msg.readByClient ? msg.createdAt : null,
+    read_at_agent: msg.readBySupport ? msg.createdAt : null,
+    legacyAttachments: msg.attachments || [],
+    sender_name: msg.senderName,
+  };
+}
+
+async function callPortalChat<T>(
+  payload: Record<string, unknown>,
+  options: { supabaseUrl: string; anonKey: string; edgeBaseUrl?: string },
+): Promise<T> {
+  const base = options.edgeBaseUrl || `${options.supabaseUrl}/functions/v1`;
+  const url = `${base.replace(/\/$/, "")}/portal-chat`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: options.anonKey,
+      Authorization: `Bearer ${options.anonKey}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  const json = (await response.json().catch(() => ({}))) as Record<string, unknown>;
+  if (!response.ok || json.ok === false) {
+    const message = String(json.error || `Falha ao chamar portal-chat (${response.status}).`);
+    throw new Error(message);
+  }
+  return (json.data || json) as T;
+}
+
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -202,9 +310,15 @@ export default function App() {
 
   const [data, setData] = useState<LoadState>(emptyLoadState);
   const [settings, setSettings] = useState<UserSettings | null>(null);
+  const [chatBackend, setChatBackend] = useState<ChatBackend>("conversation");
 
   const [conversation, setConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<MessageView[]>([]);
+  const [portalThread, setPortalThread] = useState<PortalChatThread | null>(null);
+  const [portalAccess, setPortalAccess] = useState<PortalChatAccess | null>(null);
+  const [chatAttachmentsById, setChatAttachmentsById] = useState<
+    Record<string, { storage_path: string; filename: string }>
+  >({});
   const [chatText, setChatText] = useState("");
   const [chatFile, setChatFile] = useState<File | null>(null);
 
@@ -259,6 +373,45 @@ export default function App() {
     () => contracts.find((item) => item.contract_number === selectedContract) || null,
     [contracts, selectedContract],
   );
+
+  function portalAccessStorageKey(contractNumber: string) {
+    return `portal_chat_access_${contractNumber}`;
+  }
+
+  function readPortalAccess(contractNumber: string): PortalChatAccess | null {
+    if (!contractNumber) return null;
+    const raw = localStorage.getItem(portalAccessStorageKey(contractNumber));
+    if (!raw) return null;
+    try {
+      const parsed = JSON.parse(raw) as Partial<PortalChatAccess>;
+      if (
+        !parsed ||
+        typeof parsed.protocol !== "string" ||
+        typeof parsed.accessKey !== "string" ||
+        typeof parsed.threadId !== "string"
+      ) {
+        return null;
+      }
+      return {
+        protocol: parsed.protocol,
+        accessKey: parsed.accessKey,
+        threadId: parsed.threadId,
+        contractNumber: contractNumber,
+      };
+    } catch (_error) {
+      return null;
+    }
+  }
+
+  function storePortalAccess(contractNumber: string, value: PortalChatAccess) {
+    localStorage.setItem(portalAccessStorageKey(contractNumber), JSON.stringify(value));
+  }
+
+  async function detectChatBackend(): Promise<ChatBackend> {
+    const probe = await supabase.from("conversations").select("id").limit(1);
+    if (probe.error && isMissingTableError(probe.error)) return "portal_thread";
+    return "conversation";
+  }
 
   const readNewsIds = useMemo(
     () => new Set(data.readTracking.filter((r) => r.item_type === "news").map((r) => r.item_id)),
@@ -358,9 +511,16 @@ export default function App() {
       setContracts([]);
       setSelectedContract("");
       setMustSelectContract(false);
+      setChatBackend("conversation");
+      setPortalThread(null);
+      setPortalAccess(null);
+      setChatAttachmentsById({});
       setLoadingSession(false);
       return;
     }
+
+    const backend = await detectChatBackend();
+    setChatBackend(backend);
 
     const [profileRes, contractsRes, settingsRes] = await Promise.all([
       supabase.from("profiles").select("*").eq("user_id", uid).maybeSingle(),
@@ -422,8 +582,43 @@ export default function App() {
     setLoadingSession(false);
   }
 
-  async function loadContractData(contractNumber: string) {
+  async function loadLegacyChat(contractNumber: string) {
+    const access = readPortalAccess(contractNumber);
+    if (!access) {
+      setPortalAccess(null);
+      setPortalThread(null);
+      setMessages([]);
+      setChatAttachmentsById({});
+      return;
+    }
+
+    try {
+      const chatData = await callPortalChat<{ thread: PortalChatThread; messages: PortalChatMessage[] }>(
+        {
+          action: "open_ticket",
+          protocol: access.protocol,
+          accessKey: access.accessKey,
+        },
+        edgeOptions,
+      );
+
+      setPortalAccess(access);
+      setPortalThread(chatData.thread || null);
+      setMessages((chatData.messages || []).map(mapPortalMessage));
+      setChatAttachmentsById({});
+    } catch (error) {
+      localStorage.removeItem(portalAccessStorageKey(contractNumber));
+      setPortalAccess(null);
+      setPortalThread(null);
+      setMessages([]);
+      setChatAttachmentsById({});
+      setAuthError(messageError(error));
+    }
+  }
+
+  async function loadContractData(contractNumber: string, backendOverride?: ChatBackend) {
     if (!contractNumber || !profile) return;
+    const backend = backendOverride || chatBackend;
 
     const nowIso = new Date().toISOString();
 
@@ -478,7 +673,9 @@ export default function App() {
         .eq("user_id", profile.user_id)
         .eq("contract_number", contractNumber)
         .in("item_type", ["news", "document"]),
-      supabase.from("conversations").select("*").eq("contract_number", contractNumber).maybeSingle(),
+      backend === "conversation"
+        ? supabase.from("conversations").select("*").eq("contract_number", contractNumber).maybeSingle()
+        : Promise.resolve({ data: null, error: null }),
     ]);
 
     setData({
@@ -493,14 +690,30 @@ export default function App() {
       readTracking: (readRes.data || []) as ReadTrackingItem[],
     });
 
-    const conversationData = (convRes.data || null) as Conversation | null;
-    setConversation(conversationData);
+    if (backend === "conversation") {
+      if (convRes.error && isMissingTableError(convRes.error)) {
+        setChatBackend("portal_thread");
+        setConversation(null);
+        await loadLegacyChat(contractNumber);
+        return;
+      }
 
-    if (conversationData) {
-      await loadConversationMessages(conversationData);
-    } else {
-      setMessages([]);
+      const conversationData = (convRes.data || null) as Conversation | null;
+      setPortalThread(null);
+      setPortalAccess(null);
+      setConversation(conversationData);
+
+      if (conversationData) {
+        await loadConversationMessages(conversationData);
+      } else {
+        setMessages([]);
+        setChatAttachmentsById({});
+      }
+      return;
     }
+
+    setConversation(null);
+    await loadLegacyChat(contractNumber);
   }
 
   async function loadConversationMessages(conv: Conversation) {
@@ -510,8 +723,26 @@ export default function App() {
       .eq("conversation_id", conv.id)
       .order("created_at", { ascending: true });
 
-    const rows = (messagesRes.data || []) as Message[];
+    const rows = (messagesRes.data || []) as MessageView[];
     setMessages(rows);
+
+    const attachmentIds = rows
+      .map((item) => item.attachment_id)
+      .filter((value): value is string => typeof value === "string" && value.length > 0);
+
+    if (attachmentIds.length > 0) {
+      const attRes = await supabase
+        .from("chat_attachments")
+        .select("id,storage_path,filename")
+        .in("id", attachmentIds);
+      const map: Record<string, { storage_path: string; filename: string }> = {};
+      for (const row of (attRes.data || []) as Array<{ id: string; storage_path: string; filename: string }>) {
+        map[row.id] = { storage_path: row.storage_path, filename: row.filename };
+      }
+      setChatAttachmentsById(map);
+    } else {
+      setChatAttachmentsById({});
+    }
 
     const unreadForClient = rows
       .filter((item) => item.sender_type !== "client" && !item.read_at_client)
@@ -563,8 +794,8 @@ export default function App() {
   useEffect(() => {
     if (!profile || !selectedContract) return;
     localStorage.setItem("portal_selected_contract", selectedContract);
-    loadContractData(selectedContract).catch((error) => setAuthError(messageError(error)));
-  }, [profile, selectedContract]);
+    loadContractData(selectedContract, chatBackend).catch((error) => setAuthError(messageError(error)));
+  }, [profile, selectedContract, chatBackend]);
 
   useEffect(() => {
     if (!profile || !contractFromLink || contracts.length === 0) return;
@@ -578,30 +809,35 @@ export default function App() {
   useEffect(() => {
     if (!selectedContract) return;
 
-    const channel = supabase
-      .channel(`portal-realtime-${selectedContract}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "messages", filter: `contract_number=eq.${selectedContract}` },
-        async () => {
-          if (!conversation) return;
-          await loadConversationMessages(conversation);
-        },
-      )
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "conversations", filter: `contract_number=eq.${selectedContract}` },
-        async () => {
-          const convRes = await supabase
-            .from("conversations")
-            .select("*")
-            .eq("contract_number", selectedContract)
-            .maybeSingle();
-          const conv = (convRes.data || null) as Conversation | null;
-          setConversation(conv);
-          if (conv) await loadConversationMessages(conv);
-        },
-      )
+    const channel = supabase.channel(`portal-realtime-${selectedContract}`);
+
+    if (chatBackend === "conversation") {
+      channel
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "messages", filter: `contract_number=eq.${selectedContract}` },
+          async () => {
+            if (!conversation) return;
+            await loadConversationMessages(conversation);
+          },
+        )
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "conversations", filter: `contract_number=eq.${selectedContract}` },
+          async () => {
+            const convRes = await supabase
+              .from("conversations")
+              .select("*")
+              .eq("contract_number", selectedContract)
+              .maybeSingle();
+            const conv = (convRes.data || null) as Conversation | null;
+            setConversation(conv);
+            if (conv) await loadConversationMessages(conv);
+          },
+        );
+    }
+
+    channel
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "tickets", filter: `contract_number=eq.${selectedContract}` },
@@ -616,10 +852,21 @@ export default function App() {
       )
       .subscribe();
 
+    let legacyTimer: number | null = null;
+    if (chatBackend === "portal_thread") {
+      loadLegacyChat(selectedContract).catch((error) => setAuthError(messageError(error)));
+      legacyTimer = window.setInterval(() => {
+        loadLegacyChat(selectedContract).catch(() => {
+          // silent polling failure
+        });
+      }, 5000);
+    }
+
     return () => {
+      if (legacyTimer) window.clearInterval(legacyTimer);
       supabase.removeChannel(channel);
     };
-  }, [selectedContract, conversation]);
+  }, [selectedContract, conversation, chatBackend]);
 
   async function handleLogin(event: React.FormEvent) {
     event.preventDefault();
@@ -688,6 +935,11 @@ export default function App() {
     setMessages([]);
     localStorage.removeItem("portal_selected_contract");
     localStorage.removeItem("portal_contracts_cache");
+    for (const key of Object.keys(localStorage)) {
+      if (key.startsWith("portal_chat_access_")) {
+        localStorage.removeItem(key);
+      }
+    }
     navigate("/login", { replace: true });
   }
 
@@ -726,10 +978,20 @@ export default function App() {
   async function openSignedFile(bucket: string, path: string, markRead?: { type: "news" | "document"; id: string }) {
     try {
       const token = await getAccessToken();
-      const { signedUrl } = await getSignedUrl(
-        { bucket, path, expiresIn: 120 },
-        { ...edgeOptions, accessToken: token },
-      );
+      let signedUrl = "";
+      try {
+        const signed = await getSignedUrl(
+          { bucket, path, expiresIn: 120 },
+          { ...edgeOptions, accessToken: token },
+        );
+        signedUrl = signed.signedUrl;
+      } catch (_edgeError) {
+        const fallback = await supabase.storage.from(bucket).createSignedUrl(path, 120);
+        if (fallback.error || !fallback.data?.signedUrl) {
+          throw _edgeError;
+        }
+        signedUrl = fallback.data.signedUrl;
+      }
       if (markRead) await markAsRead(markRead.type, markRead.id);
       window.open(signedUrl, "_blank", "noopener,noreferrer");
     } catch (error) {
@@ -829,11 +1091,19 @@ export default function App() {
     const urls: Array<{ id: string; caption: string; url: string }> = [];
     for (const item of items) {
       try {
-        const signed = await getSignedUrl(
-          { bucket: "gallery", path: item.storage_path, expiresIn: 120 },
-          { ...edgeOptions, accessToken: token },
-        );
-        urls.push({ id: item.id, caption: item.caption || "", url: signed.signedUrl });
+        let url = "";
+        try {
+          const signed = await getSignedUrl(
+            { bucket: "gallery", path: item.storage_path, expiresIn: 120 },
+            { ...edgeOptions, accessToken: token },
+          );
+          url = signed.signedUrl;
+        } catch (_edgeError) {
+          const fallback = await supabase.storage.from("gallery").createSignedUrl(item.storage_path, 120);
+          if (fallback.error || !fallback.data?.signedUrl) throw _edgeError;
+          url = fallback.data.signedUrl;
+        }
+        urls.push({ id: item.id, caption: item.caption || "", url });
       } catch (_error) {
         // ignore individual image failures
       }
@@ -885,7 +1155,7 @@ export default function App() {
     setTicketCategory("general");
     setTicketMessage("");
     setTicketFiles([]);
-    await loadContractData(selectedContract);
+    await loadContractData(selectedContract, chatBackend);
   }
 
   async function ensureConversation(): Promise<Conversation | null> {
@@ -916,65 +1186,222 @@ export default function App() {
   async function sendChatMessage() {
     if (!profile || !selectedContract || (!chatText.trim() && !chatFile)) return;
 
-    const conv = await ensureConversation();
-    if (!conv) return;
+    if (chatBackend === "conversation") {
+      const conv = await ensureConversation();
+      if (!conv) return;
 
-    let attachmentId: string | null = null;
-    let messageType: "text" | "attachment" = "text";
+      let attachmentId: string | null = null;
+      let messageType: "text" | "attachment" = "text";
 
-    if (chatFile) {
-      const objectPath = `${selectedContract}/${conv.id}/${crypto.randomUUID()}`;
-      const up = await supabase.storage.from("chat").upload(objectPath, chatFile, { upsert: false });
-      if (up.error) {
-        setAuthError(up.error.message);
+      if (chatFile) {
+        const objectPath = `${selectedContract}/${conv.id}/${crypto.randomUUID()}`;
+        const up = await supabase.storage.from("chat").upload(objectPath, chatFile, { upsert: false });
+        if (up.error) {
+          setAuthError(up.error.message);
+          return;
+        }
+
+        const attachment = await supabase
+          .from("chat_attachments")
+          .insert({
+            conversation_id: conv.id,
+            contract_number: selectedContract,
+            storage_path: objectPath,
+            filename: chatFile.name,
+            mime_type: chatFile.type || "application/octet-stream",
+            size_bytes: chatFile.size,
+          })
+          .select("id")
+          .single();
+
+        if (attachment.error || !attachment.data) {
+          setAuthError(attachment.error?.message || "Falha no anexo.");
+          return;
+        }
+
+        attachmentId = attachment.data.id as string;
+        messageType = "attachment";
+      }
+
+      const msgRes = await supabase.from("messages").insert({
+        conversation_id: conv.id,
+        contract_number: selectedContract,
+        sender_type: "client",
+        sender_user_id: profile.user_id,
+        message_type: messageType,
+        body_text: chatText.trim() || null,
+        attachment_id: attachmentId,
+      });
+
+      if (msgRes.error) {
+        setAuthError(msgRes.error.message);
         return;
       }
 
-      const attachment = await supabase
-        .from("chat_attachments")
-        .insert({
-          conversation_id: conv.id,
-          contract_number: selectedContract,
-          storage_path: objectPath,
-          filename: chatFile.name,
-          mime_type: chatFile.type || "application/octet-stream",
-          size_bytes: chatFile.size,
-        })
-        .select("id")
-        .single();
+      await supabase
+        .from("conversations")
+        .update({ last_message_at: new Date().toISOString(), status: "open" })
+        .eq("id", conv.id);
 
-      if (attachment.error || !attachment.data) {
-        setAuthError(attachment.error?.message || "Falha no anexo.");
-        return;
-      }
-
-      attachmentId = attachment.data.id as string;
-      messageType = "attachment";
-    }
-
-    const msgRes = await supabase.from("messages").insert({
-      conversation_id: conv.id,
-      contract_number: selectedContract,
-      sender_type: "client",
-      sender_user_id: profile.user_id,
-      message_type: messageType,
-      body_text: chatText.trim() || null,
-      attachment_id: attachmentId,
-    });
-
-    if (msgRes.error) {
-      setAuthError(msgRes.error.message);
+      setChatText("");
+      setChatFile(null);
+      await loadConversationMessages(conv);
       return;
     }
 
-    await supabase
-      .from("conversations")
-      .update({ last_message_at: new Date().toISOString(), status: "open" })
-      .eq("id", conv.id);
+    try {
+      const attachmentPayload: Array<{ name: string; type: string; size: number; contentBase64: string }> = [];
+      if (chatFile) {
+        attachmentPayload.push({
+          name: chatFile.name,
+          type: chatFile.type || "application/octet-stream",
+          size: chatFile.size,
+          contentBase64: await fileToBase64(chatFile),
+        });
+      }
 
-    setChatText("");
-    setChatFile(null);
-    await loadConversationMessages(conv);
+      if (!portalAccess) {
+        const created = await callPortalChat<{
+          protocol: string;
+          accessKey: string;
+          thread: PortalChatThread;
+          messages: PortalChatMessage[];
+        }>(
+          {
+            action: "create_ticket",
+            clientName: profile.full_name,
+            clientEmail: profile.email_contact || null,
+            clientPhone: profile.phone_e164 || null,
+            clientDocument: profile.cpf,
+            subject: `Portal Cliente - Contrato ${selectedContract}`,
+            message: chatText.trim() || "Mensagem com anexo",
+            attachments: attachmentPayload,
+          },
+          edgeOptions,
+        );
+
+        const nextAccess: PortalChatAccess = {
+          protocol: created.protocol,
+          accessKey: created.accessKey,
+          threadId: created.thread.id,
+          contractNumber: selectedContract,
+        };
+
+        storePortalAccess(selectedContract, nextAccess);
+        setPortalAccess(nextAccess);
+        setPortalThread(created.thread || null);
+        setMessages((created.messages || []).map(mapPortalMessage));
+      } else {
+        await callPortalChat<{ thread: PortalChatThread; message: PortalChatMessage }>(
+          {
+            action: "send_message",
+            protocol: portalAccess.protocol,
+            accessKey: portalAccess.accessKey,
+            senderName: profile.full_name,
+            message: chatText.trim() || "",
+            attachments: attachmentPayload,
+          },
+          edgeOptions,
+        );
+        await loadLegacyChat(selectedContract);
+      }
+
+      setChatText("");
+      setChatFile(null);
+    } catch (error) {
+      setAuthError(messageError(error));
+    }
+  }
+
+  function localSearchFallback(query: string): SearchGrouped {
+    const q = query.trim().toLowerCase();
+    const groups: Record<string, Array<{ type: string; id: string; title: string; snippet: string; link_target: string }>> = {
+      news: [],
+      documents: [],
+      bills: [],
+      tickets: [],
+      faq: [],
+      messages: [],
+    };
+
+    for (const item of data.news) {
+      if (`${item.title} ${item.body} ${item.category}`.toLowerCase().includes(q)) {
+        groups.news.push({
+          type: "news",
+          id: item.id,
+          title: item.title,
+          snippet: item.body.slice(0, 120),
+          link_target: "novidades",
+        });
+      }
+    }
+
+    for (const item of data.documents) {
+      if (`${item.title} ${item.type}`.toLowerCase().includes(q)) {
+        groups.documents.push({
+          type: "document",
+          id: item.id,
+          title: item.title,
+          snippet: item.type,
+          link_target: "informacoes",
+        });
+      }
+    }
+
+    for (const item of data.bills) {
+      if (`${item.id} ${item.status} ${item.competence || ""}`.toLowerCase().includes(q)) {
+        groups.bills.push({
+          type: "bill",
+          id: item.id,
+          title: `${item.status.toUpperCase()} - ${toCurrency(item.amount_cents)}`,
+          snippet: `Vencimento ${item.due_date}`,
+          link_target: "financeiro",
+        });
+      }
+    }
+
+    for (const item of data.tickets) {
+      if (`${item.protocol} ${item.subject} ${item.category} ${item.message}`.toLowerCase().includes(q)) {
+        groups.tickets.push({
+          type: "ticket",
+          id: item.id,
+          title: `${item.protocol} - ${item.subject}`,
+          snippet: item.status,
+          link_target: "atendimento",
+        });
+      }
+    }
+
+    for (const item of data.faq) {
+      if (`${item.category} ${item.question} ${item.answer}`.toLowerCase().includes(q)) {
+        groups.faq.push({
+          type: "faq",
+          id: item.id,
+          title: item.question,
+          snippet: item.answer.slice(0, 120),
+          link_target: "atendimento",
+        });
+      }
+    }
+
+    for (const item of messages) {
+      const sender = item.sender_type === "client" ? "cliente" : "suporte";
+      if (`${sender} ${item.body_text || ""}`.toLowerCase().includes(q)) {
+        groups.messages.push({
+          type: "message",
+          id: item.id,
+          title: `Chat - ${sender}`,
+          snippet: (item.body_text || "[anexo]").slice(0, 120),
+          link_target: "atendimento",
+        });
+      }
+    }
+
+    const normalizedGroups = Object.fromEntries(
+      Object.entries(groups).filter(([, items]) => items.length > 0),
+    ) as SearchGrouped["groups"];
+    const total = Object.values(groups).reduce((sum, list) => sum + list.length, 0);
+    return { groups: normalizedGroups, total };
   }
 
   async function submitGlobalSearch() {
@@ -993,7 +1420,8 @@ export default function App() {
       );
       setSearchResult(res as SearchGrouped);
     } catch (error) {
-      setAuthError(messageError(error));
+      setSearchResult(localSearchFallback(searchQ));
+      setAuthError("Busca avancada indisponivel no momento. Exibindo resultados locais.");
     }
   }
 
@@ -1026,7 +1454,7 @@ export default function App() {
     }
 
     setProposedChanges("");
-    await loadContractData(selectedContract);
+    await loadContractData(selectedContract, chatBackend);
   }
 
   async function saveSettings(next: UserSettings) {
@@ -1374,13 +1802,57 @@ export default function App() {
 
         <div className="card">
           <h3>Chat</h3>
+          {chatBackend === "portal_thread" ? (
+            <small>
+              {portalThread
+                ? `Protocolo ${portalThread.protocol} - status ${portalThread.status}`
+                : "Inicie a conversa para gerar o protocolo de atendimento."}
+            </small>
+          ) : null}
           <div className="chat-box">
+            {chatBackend === "portal_thread" && !portalAccess && messages.length === 0 ? (
+              <div className="msg">
+                <div><strong>Atendimento</strong></div>
+                <div>Digite sua mensagem para iniciar o chat com o suporte.</div>
+              </div>
+            ) : null}
             {messages.map((msg) => (
               <div key={msg.id} className={`msg ${msg.sender_type === "client" ? "self" : ""}`}>
                 <div>
-                  <strong>{msg.sender_type === "client" ? "Voce" : "Atendimento"}</strong> - {formatDateTime(msg.created_at)}
+                  <strong>
+                    {msg.sender_type === "client" ? "Voce" : msg.sender_name || "Atendimento"}
+                  </strong>{" "}
+                  - {formatDateTime(msg.created_at)}
                 </div>
                 <div>{msg.body_text || "[anexo]"}</div>
+                {msg.legacyAttachments && msg.legacyAttachments.length > 0 ? (
+                  <div className="row">
+                    {msg.legacyAttachments.map((attachment, index) => (
+                      <a
+                        key={`${msg.id}-att-${index}`}
+                        href={attachment.url || "#"}
+                        target="_blank"
+                        rel="noreferrer noopener"
+                      >
+                        {attachment.name || "Anexo"}
+                      </a>
+                    ))}
+                  </div>
+                ) : null}
+                {(() => {
+                  const attachmentMeta = msg.attachment_id
+                    ? chatAttachmentsById[msg.attachment_id]
+                    : undefined;
+                  if (!attachmentMeta) return null;
+                  return (
+                    <button
+                      className="secondary"
+                      onClick={() => openSignedFile("chat", attachmentMeta.storage_path)}
+                    >
+                      Abrir anexo: {attachmentMeta.filename}
+                    </button>
+                  );
+                })()}
                 {msg.sender_type === "client" ? (
                   <small>{msg.read_at_agent ? "Lida pelo atendimento" : "Enviada"}</small>
                 ) : null}

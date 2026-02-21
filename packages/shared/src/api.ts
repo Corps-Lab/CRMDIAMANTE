@@ -14,12 +14,13 @@ async function callEdge<T>(
 ): Promise<T> {
   const baseUrl = options.edgeBaseUrl || `${options.supabaseUrl}/functions/v1`;
   const url = `${baseUrl.replace(/\/$/, "")}/${fn}`;
+  const bearer = options.accessToken || options.anonKey;
   const response = await fetch(url, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       apikey: options.anonKey,
-      ...(options.accessToken ? { Authorization: `Bearer ${options.accessToken}` } : {}),
+      Authorization: `Bearer ${bearer}`,
     },
     body: JSON.stringify(payload),
   });
