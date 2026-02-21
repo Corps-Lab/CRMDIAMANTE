@@ -45,8 +45,7 @@ jobs:
       - name: Build CRM app
         env:
           VITE_BASE_PATH: ${{ format('/{0}/', github.event.repository.name) }}
-          VITE_PORTAL_URL: ${{ format('https://{0}.github.io/{1}/portal/#', github.repository_owner, github.event.repository.name) }}
-        run: pnpm --filter @crm/agent-crm build
+        run: pnpm exec vite build --outDir dist-crm
 
       - name: Build Portal app
         env:
@@ -57,7 +56,7 @@ jobs:
         run: |
           rm -rf dist
           mkdir -p dist/portal
-          cp -R apps/agent-crm/dist/. dist/
+          cp -R dist-crm/. dist/
           cp -R apps/portal-web/dist/. dist/portal/
           cp dist/index.html dist/404.html
           cp dist/portal/index.html dist/portal/404.html
