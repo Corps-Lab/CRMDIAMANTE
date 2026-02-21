@@ -11,3 +11,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
     </HashRouter>
   </React.StrictMode>,
 );
+
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch((err) => {
+    console.error("Portal SW registration failed", err);
+  });
+}

@@ -1,6 +1,6 @@
 {
-  "name": "CRM DIAMANTE",
-  "short_name": "CRM DIAMANTE",
+  "name": "Portal do Cliente | CRM DIAMANTE",
+  "short_name": "Portal DIAMANTE",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
