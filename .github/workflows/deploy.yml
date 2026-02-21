@@ -18,6 +18,8 @@ concurrency:
 env:
   VITE_SUPABASE_URL: https://vrijkozdsituzznxhttx.supabase.co
   VITE_SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZyaWprb3pkc2l0dXp6bnhodHR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE2MDQ2NTIsImV4cCI6MjA4NzE4MDY1Mn0.P2G_3btpVNgGQIKiJehkWcFFg1z9UAYbKg9Jb9c1nRg
+  VITE_APP_RUNTIME: online
+  VITE_USE_MOCK_AUTH: "false"
 
 jobs:
   build:

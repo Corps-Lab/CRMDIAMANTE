@@ -156,19 +156,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const nextUsers = [...users];
     defaultUsers.forEach((seed) => {
-      const exists = nextUsers.some(
+      const existingIndex = nextUsers.findIndex(
         (u) => u.email.toLowerCase() === seed.email.toLowerCase(),
       );
-      if (exists) return;
-      nextUsers.push({
-        id: safeId("user"),
-        email: seed.email,
-        password: "azul123",
-        nome: seed.nome,
-        role: seed.role,
-        cpf: null,
-        cargo: seed.cargo,
-      });
+      if (existingIndex >= 0) {
+        nextUsers[existingIndex] = {
+          ...nextUsers[existingIndex],
+          nome: seed.nome,
+          role: seed.role,
+          cargo: seed.cargo,
+          // Mantemos senha padrão consistente para evitar credenciais quebradas no modo mock.
+          password: "teste123",
+        };
+      } else {
+        nextUsers.push({
+          id: safeId("user"),
+          email: seed.email,
+          password: "teste123",
+          nome: seed.nome,
+          role: seed.role,
+          cpf: null,
+          cargo: seed.cargo,
+        });
+      }
     });
 
     persistLocalUsers(nextUsers);
