@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Client } from "@/types/client";
+import { Client, recorrenciaLabels } from "@/types/client";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -39,13 +39,6 @@ export function ClientTable({ clients, onEdit, onDelete, onView }: ClientTablePr
     }).format(value);
   };
 
-  const recorrenciaLabel: Record<string, string> = {
-    mensal: "Mensal",
-    trimestral: "Trimestral",
-    semestral: "Semestral",
-    anual: "Anual",
-  };
-
   const handleConfirmDelete = () => {
     if (deleteId) {
       onDelete(deleteId);
@@ -70,11 +63,11 @@ export function ClientTable({ clients, onEdit, onDelete, onView }: ClientTablePr
         <Table className="min-w-[920px]">
           <TableHeader>
             <TableRow className="bg-secondary/50 hover:bg-secondary/50">
-              <TableHead className="text-muted-foreground font-semibold">Razão Social</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Razão Social / Nome</TableHead>
               <TableHead className="text-muted-foreground font-semibold">Documentos</TableHead>
               <TableHead className="text-muted-foreground font-semibold">Responsável</TableHead>
               <TableHead className="text-muted-foreground font-semibold">Valor</TableHead>
-              <TableHead className="text-muted-foreground font-semibold">Recorrência</TableHead>
+              <TableHead className="text-muted-foreground font-semibold">Forma de Pagamento</TableHead>
               <TableHead className="text-muted-foreground font-semibold text-right">Ações</TableHead>
             </TableRow>
           </TableHeader>
@@ -102,7 +95,7 @@ export function ClientTable({ clients, onEdit, onDelete, onView }: ClientTablePr
                 </TableCell>
                 <TableCell>
                   <span className="px-2 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary">
-                    {recorrenciaLabel[client.recorrencia]}
+                    {recorrenciaLabels[client.recorrencia] || client.recorrencia}
                   </span>
                 </TableCell>
                 <TableCell className="text-right">

@@ -64,6 +64,7 @@ function sessionStorageKey(agencyId: string) {
 
 export default function PortalCliente() {
   const { currentAgency } = useAgency();
+  const portalAuthUrl = `${import.meta.env.BASE_URL}portal/`;
   const [mode, setMode] = useState<PortalMode>("novo");
   const [loading, setLoading] = useState(false);
   const [thread, setThread] = useState<PortalChatThread | null>(null);
@@ -526,6 +527,11 @@ export default function PortalCliente() {
                 <Badge variant="outline">
                   Status: {statusLabel[thread?.status || "aberto"] || "Aberto"}
                 </Badge>
+                <Button type="button" variant="outline" asChild>
+                  <a href={portalAuthUrl} target="_blank" rel="noreferrer">
+                    Abrir Login do Portal
+                  </a>
+                </Button>
                 <Button
                   type="button"
                   variant={pushPermission === "granted" ? "secondary" : "outline"}
@@ -536,6 +542,11 @@ export default function PortalCliente() {
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
+                <Button type="button" variant="outline" asChild>
+                  <a href={portalAuthUrl} target="_blank" rel="noreferrer">
+                    Abrir Login do Portal
+                  </a>
+                </Button>
                 <Button
                   type="button"
                   variant={mode === "novo" ? "default" : "outline"}

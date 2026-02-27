@@ -9,6 +9,7 @@ import {
   normalizePass6,
   isValidCpf,
   isValidPass6,
+  type ClientLoginResult,
   type Contract,
   type Conversation,
   type FinancialBill,
@@ -187,6 +188,38 @@ function normalizeProfileRow(row: unknown): Profile | null {
   };
 }
 
+function normalizeContractRow(
+  row: unknown,
+  fallbackUserId: string,
+  cpf: string,
+): Contract {
+  const source = (row && typeof row === "object" ? row : {}) as Record<string, unknown>;
+  const contractNumber =
+    readCompatString(source, ["contract_number", "numero_contrato", "contract_id", "id"]) ||
+    `CTR-${cpf.slice(-6)}`;
+  const developmentName =
+    readCompatString(source, ["development_name", "empreendimento", "development", "obra_nome"]) ||
+    "Empreendimento";
+  const unitLabel =
+    readCompatString(source, ["unit_label", "unidade", "unit", "lote"]) || "Unidade";
+  const developmentId =
+    readCompatString(source, ["development_id", "empreendimento_id"]) ||
+    developmentName.toLowerCase().replace(/\s+/g, "-");
+  const unitId =
+    readCompatString(source, ["unit_id", "unidade_id"]) ||
+    unitLabel.toLowerCase().replace(/\s+/g, "-");
+
+  return {
+    contract_number: contractNumber,
+    user_id: readCompatString(source, ["user_id"]) || fallbackUserId,
+    development_id: developmentId,
+    development_name: developmentName,
+    unit_id: unitId,
+    unit_label: unitLabel,
+    created_at: readCompatString(source, ["created_at"]) || new Date().toISOString(),
+  };
+}
+
 function toCsv(filename: string, headers: string[], rows: Array<Array<string | number>>) {
   const csv = [headers, ...rows]
     .map((row) => row.map((cell) => `"${String(cell ?? "").replaceAll('"', '""')}"`).join(","))
@@ -224,7 +257,21 @@ async function getAccessToken() {
 }
 
 function messageError(error: unknown) {
-  return error instanceof Error ? error.message : "Erro inesperado.";
+  if (error instanceof Error && error.message) return error.message;
+  if (error && typeof error === "object") {
+    const source = error as Record<string, unknown>;
+    const candidates = [
+      source.message,
+      source.error,
+      source.error_description,
+      source.details,
+      source.hint,
+    ];
+    for (const candidate of candidates) {
+      if (typeof candidate === "string" && candidate.trim()) return candidate.trim();
+    }
+  }
+  return "Erro inesperado.";
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -868,6 +915,87 @@ export default function App() {
     };
   }, [selectedContract, conversation, chatBackend]);
 
+  function applyLoginState(result: Pick<ClientLoginResult, "profile" | "contracts">) {
+    setProfile(result.profile);
+    setContracts(result.contracts);
+    const linkedContract =
+      contractFromLink && result.contracts.some((item) => item.contract_number === contractFromLink)
+        ? contractFromLink
+        : "";
+    const nextContract =
+      linkedContract || (result.contracts.length === 1 ? result.contracts[0].contract_number : "");
+    setSelectedContract(nextContract);
+    setMustSelectContract(result.contracts.length > 1 && !nextContract);
+    setLockUntil(null);
+    setLockRemainingSeconds(0);
+    setLoginCpf("");
+    setLoginPass6("");
+    localStorage.setItem("portal_contracts_cache", JSON.stringify(result.contracts));
+    navigate(result.contracts.length > 1 && !nextContract ? "/selecionar-contrato" : "/", {
+      replace: true,
+    });
+  }
+
+  async function fallbackLoginWithoutEdge(cpf: string, pass6: string): Promise<ClientLoginResult> {
+    const email = `${cpf}@portal.local`;
+    const signInRes = await supabase.auth.signInWithPassword({ email, password: pass6 });
+    if (signInRes.error || !signInRes.data.session) {
+      throw new Error(signInRes.error?.message || "CPF ou senha invalidos.");
+    }
+
+    const uid = signInRes.data.user?.id || signInRes.data.session.user.id;
+    const [profileRes, contractsRes] = await Promise.all([
+      supabase.from("profiles").select("*").eq("user_id", uid).maybeSingle(),
+      supabase.from("contracts").select("*").eq("user_id", uid).order("contract_number"),
+    ]);
+
+    if (profileRes.error) {
+      throw new Error(profileRes.error.message || "Falha ao carregar perfil do cliente.");
+    }
+    if (contractsRes.error) {
+      throw new Error(contractsRes.error.message || "Falha ao carregar contratos do cliente.");
+    }
+
+    const profileValue = normalizeProfileRow(profileRes.data);
+    if (!profileValue) {
+      throw new Error("Perfil do cliente nao encontrado.");
+    }
+    if (profileValue.portal_access_enabled === false) {
+      await supabase.auth.signOut();
+      throw new Error("Acesso do portal desativado para este cliente.");
+    }
+
+    const expectedFromPhone = String(profileValue.phone_e164 || "")
+      .replace(/\D/g, "")
+      .slice(-6);
+    const expectedPass6 = normalizePass6(profileValue.phone_last6 || expectedFromPhone);
+    if (expectedPass6 && expectedPass6 !== pass6) {
+      await supabase.auth.signOut();
+      throw new Error("CPF ou senha invalidos.");
+    }
+
+    const contractsData = (contractsRes.data || []) as unknown[];
+    const contractsValue = contractsData.map((row) =>
+      normalizeContractRow(row, profileValue.user_id, cpf),
+    );
+    if (!contractsValue.length) {
+      contractsValue.push(normalizeContractRow(null, profileValue.user_id, cpf));
+    }
+
+    return {
+      session: {
+        access_token: signInRes.data.session.access_token,
+        refresh_token: signInRes.data.session.refresh_token,
+        expires_in: signInRes.data.session.expires_in,
+        token_type: signInRes.data.session.token_type,
+      },
+      profile: profileValue,
+      contracts: contractsValue,
+      locked_until: null,
+      remaining_seconds: 0,
+    };
+  }
+
   async function handleLogin(event: React.FormEvent) {
     event.preventDefault();
     setAuthError("");
@@ -890,26 +1018,9 @@ export default function App() {
         access_token: res.session.access_token,
         refresh_token: res.session.refresh_token,
       });
-
-      setProfile(res.profile);
-      setContracts(res.contracts);
-      const linkedContract =
-        contractFromLink && res.contracts.some((item) => item.contract_number === contractFromLink)
-          ? contractFromLink
-          : "";
-      const selectedContract =
-        linkedContract || (res.contracts.length === 1 ? res.contracts[0].contract_number : "");
-      setSelectedContract(selectedContract);
-      setMustSelectContract(res.contracts.length > 1 && !selectedContract);
-      setLockUntil(null);
-      setLockRemainingSeconds(0);
-      setLoginCpf("");
-      setLoginPass6("");
-      localStorage.setItem("portal_contracts_cache", JSON.stringify(res.contracts));
-      navigate(res.contracts.length > 1 && !selectedContract ? "/selecionar-contrato" : "/", { replace: true });
+      applyLoginState(res);
     } catch (error) {
       const e = error as Error & { status?: number; data?: Record<string, unknown> | null };
-      setAuthError(e.message || "Falha no login.");
 
       const lockedUntilValue =
         e.data && typeof e.data.locked_until === "string" ? e.data.locked_until : null;
@@ -917,9 +1028,26 @@ export default function App() {
         e.data && typeof e.data.remaining_seconds === "number" ? e.data.remaining_seconds : 0;
 
       if (e.status === 423 && lockedUntilValue) {
+        setAuthError(e.message || "Conta temporariamente bloqueada.");
         setLockUntil(lockedUntilValue);
         setLockRemainingSeconds(remainingValue);
+        return;
       }
+
+      // Fallback resiliente: tenta autenticar direto pelo Auth sintético
+      // quando a edge function oscila/retorna erro inesperado.
+      if (!e.status || e.status >= 500) {
+        try {
+          const fallback = await fallbackLoginWithoutEdge(cpf, pass6);
+          applyLoginState(fallback);
+          return;
+        } catch (fallbackError) {
+          setAuthError(messageError(fallbackError));
+          return;
+        }
+      }
+
+      setAuthError(e.message || "Falha no login.");
     }
   }
 

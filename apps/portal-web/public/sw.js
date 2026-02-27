@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "crm-diamante-portal";
-const CACHE_NAME = `${CACHE_PREFIX}-v3`;
+const CACHE_NAME = `${CACHE_PREFIX}-v4`;
 const BASE_PATH = new URL(self.registration.scope).pathname;
 const OFFLINE_URL = `${BASE_PATH}index.html`;
 const CORE_ASSETS = [

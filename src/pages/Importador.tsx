@@ -25,7 +25,17 @@ interface NotionClientPreview {
   cpf: string | null;
   endereco: string;
   valorPago: number;
-  recorrencia: "mensal" | "trimestral" | "semestral" | "anual";
+  recorrencia:
+    | "a_vista"
+    | "parcelado"
+    | "boleto"
+    | "financiamento"
+    | "consorcio"
+    | "permuta"
+    | "mensal"
+    | "trimestral"
+    | "semestral"
+    | "anual";
   responsavel: string;
   contatoInterno: string;
 }
@@ -37,7 +47,7 @@ const datasetFields: Record<DatasetKey, { key: string; label: string; required?:
     { key: "cpf", label: "cpf" },
     { key: "endereco", label: "endereco", required: true },
     { key: "valorPago", label: "valorPago" },
-    { key: "recorrencia", label: "recorrencia", fallback: "mensal" },
+    { key: "recorrencia", label: "formaPagamento (ou recorrencia)", fallback: "parcelado" },
     { key: "responsavel", label: "responsavel" },
     { key: "contatoInterno", label: "contatoInterno" },
   ],
@@ -246,7 +256,7 @@ export default function Importador() {
           cpf: cpf || undefined,
           endereco: entry.endereco || "Nao informado",
           valorPago: Number(entry.valorPago || 0),
-          recorrencia: entry.recorrencia || "mensal",
+          recorrencia: entry.recorrencia || "parcelado",
           responsavel: entry.responsavel || "Nao informado",
           contatoInterno: entry.contatoInterno || "nao-informado@diamante.local",
         });
@@ -302,6 +312,13 @@ export default function Importador() {
             const v = column ? row[column] : "";
             return v !== undefined && v !== null && v !== "" ? v : fallback ?? "";
           };
+          const clientPaymentValue = () =>
+            (
+              fieldVal("recorrencia") ||
+              fieldVal("formaPagamento") ||
+              fieldVal("forma_pagamento") ||
+              fieldVal("forma de pagamento")
+            ) as string;
           switch (target) {
             case "clientes": {
               await addClient({
@@ -310,7 +327,7 @@ export default function Importador() {
                 cpf: fieldVal("cpf") || undefined,
                 endereco: fieldVal("endereco"),
                 valorPago: Number(fieldVal("valorPago") || 0),
-                recorrencia: (fieldVal("recorrencia") as any) || "mensal",
+                recorrencia: (clientPaymentValue() as any) || "parcelado",
                 responsavel: fieldVal("responsavel"),
                 contatoInterno: fieldVal("contatoInterno") || fieldVal("contato"),
               });
@@ -482,7 +499,7 @@ export default function Importador() {
             <div className="text-sm text-muted-foreground">
               Campos esperados por tipo:
               <ul className="list-disc pl-5 mt-2 space-y-1">
-                <li><strong>Clientes</strong>: razaoSocial, cnpj, cpf (opcional), endereco, valorPago, recorrencia, responsavel, contatoInterno</li>
+                <li><strong>Clientes</strong>: razaoSocial, cnpj, cpf (opcional), endereco, valorPago, formaPagamento (ou recorrencia), responsavel, contatoInterno</li>
                 <li><strong>Fornecedores</strong>: razaoSocial, docTipo (cpf/cnpj), documento, endereco, responsavel, contato</li>
                 <li><strong>Obras</strong>: nome, cidade, inicioPrevisto, entregaPrevista, status, progresso, orcamento, gasto</li>
                 <li><strong>Unidades</strong>: projectId, nome, area, preco, status</li>

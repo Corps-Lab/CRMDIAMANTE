@@ -38,9 +38,24 @@ export const clientSchema = z.object({
     .number({ invalid_type_error: "Valor deve ser um número" })
     .positive("Valor deve ser maior que zero")
     .max(10000000, "Valor muito alto"),
-  recorrencia: z.enum(["mensal", "trimestral", "semestral", "anual"], {
-    errorMap: () => ({ message: "Selecione uma recorrência válida" }),
-  }),
+  recorrencia: z.enum(
+    [
+      "a_vista",
+      "parcelado",
+      "boleto",
+      "financiamento",
+      "consorcio",
+      "permuta",
+      // Compatibilidade com registros antigos
+      "mensal",
+      "trimestral",
+      "semestral",
+      "anual",
+    ],
+    {
+      errorMap: () => ({ message: "Selecione uma forma de pagamento válida" }),
+    },
+  ),
   responsavel: z
     .string()
     .trim()

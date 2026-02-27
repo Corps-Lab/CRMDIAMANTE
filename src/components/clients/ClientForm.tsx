@@ -53,7 +53,7 @@ export function ClientForm({
       cpf: "",
       endereco: "",
       valorPago: 0,
-      recorrencia: "mensal",
+      recorrencia: "parcelado",
       responsavel: "",
       contatoInterno: "",
     },
@@ -97,12 +97,12 @@ export function ClientForm({
 
         <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Razão Social */}
+            {/* Razão Social / Nome Completo */}
             <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="razaoSocial">Razão Social *</Label>
+              <Label htmlFor="razaoSocial">Razão Social / Nome Completo *</Label>
               <Input
                 id="razaoSocial"
-                placeholder="Nome da empresa"
+                placeholder="Nome da empresa ou nome completo"
                 {...register("razaoSocial")}
                 className="bg-secondary border-border"
               />
@@ -178,9 +178,9 @@ export function ClientForm({
               )}
             </div>
 
-            {/* Recorrência */}
+            {/* Forma de pagamento */}
             <div className="space-y-2">
-              <Label>Recorrência de Pagamento *</Label>
+              <Label>Forma de Pagamento *</Label>
               <Select
                 value={watch("recorrencia")}
                 onValueChange={(value) =>
@@ -188,7 +188,7 @@ export function ClientForm({
                 }
               >
                 <SelectTrigger className="bg-secondary border-border">
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue placeholder="Selecione a forma" />
                 </SelectTrigger>
                 <SelectContent>
                   {recorrenciaOptions.map((option) => (

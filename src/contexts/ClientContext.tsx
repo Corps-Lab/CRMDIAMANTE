@@ -198,13 +198,21 @@ export function ClientProvider({ children }: { children: ReactNode }) {
   };
 
   const totalFaturamento = clients.reduce((acc, client) => {
-    const multiplier = {
+    const multiplier: Record<string, number> = {
+      // Novas formas de pagamento (tratadas como valor informado do negócio)
+      a_vista: 1,
+      parcelado: 1,
+      boleto: 1,
+      financiamento: 1,
+      consorcio: 1,
+      permuta: 1,
+      // Compatibilidade com cadastros antigos
       mensal: 1,
       trimestral: 1 / 3,
       semestral: 1 / 6,
       anual: 1 / 12,
     };
-    return acc + client.valorPago * multiplier[client.recorrencia];
+    return acc + client.valorPago * (multiplier[client.recorrencia] ?? 1);
   }, 0);
 
   return (
